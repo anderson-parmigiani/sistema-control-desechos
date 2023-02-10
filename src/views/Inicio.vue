@@ -36,7 +36,7 @@ const getData = async () => {
     if(selectedMaterial.value !== null && !dat.find((item) => item.desecho === selectedMaterial.value)){
       dat.length = 0;
       adding.value = true;
-      inputData.value = {desecho: selectedMaterial.value, desechoID:selectedMaterial.value.toLowerCase().replace(/\s+/g, ''), cp: 0, selectedCP: '', uid: userStore.userData.uid};
+      inputData.value = {desecho: selectedMaterial.value, desechoID:selectedMaterial.value.toLowerCase().replace(/\s+/g, ''), cp: 0, uid: userStore.userData.uid};
       sm.value = '';
       validate.value = 'needs-validation';
 
