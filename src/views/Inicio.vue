@@ -147,7 +147,8 @@ const showTotalSum = element => {
                         <div class="bg-light d-flex align-items-center fw-bold mt-5 w-100">
                           <p class="mb-0">Peso Final</p>
                           <p class="d-none d-xxl-block mc mb-0">${sumTotal.value} kg</p>
-                          <p class="d-block d-xxl-none mcs mb-0">${sumTotal.value} kg</p>
+                          <p class="d-none d-xl-block d-xxl-none mcm mb-0">${sumTotal.value} kg</p>
+                          <p class="d-block d-xl-none mcs mb-0">${sumTotal.value} kg</p>
                         </div>
                         `
 };
@@ -343,6 +344,10 @@ onMounted(() => {
 
 .mc {
   margin-left: 15.5rem;
+}
+
+.mcm {
+  margin-left: 12.8rem;
 }
 
 .mcs {

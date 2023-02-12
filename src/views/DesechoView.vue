@@ -1415,7 +1415,29 @@ onMounted(() => {
     </div>
     <!-- <button v-if="userStore.wait == 1" class="btn btn-primary d-xxl-none float-end ms-3" style="margin-top: 1.6rem" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill" style="font-size: 20px;"></i></button> -->
     <button v-if="userStore.wait == 1" class="btn btn-primary d-xxl-none float-end" style="margin-top: 1.6rem" type="button" data-bs-toggle="modal" data-bs-target="#newItemModal" @click="refresh"><i class="bi bi-plus-lg" style="font-size: 20px;"></i></button>
-    <div class="d-flex float-start col-2 me-5 ps-xxl-5" style="margin-left: 5.2rem!important">
+    <div class="d-flex float-start ">
+      <div class="col-3 me-xl-5 me-3 ps-xxl-5 pe-5 pe-xl-4" style="margin-left: 5.2rem!important">
+      <VueMultiselect
+                  v-model="tipMov"
+                  :options="movOptions"
+                  :searchable="false"
+                  :allow-empty="false"
+                  :show-labels="false"
+                  placeholder="Todos"
+                  @select="initial"
+      />
+      </div>
+      <div class="mb-0 mb-xxl-4 col-9">
+        <label for="startDate" class="ms-2 ms-xl-3 ms-xxl-4 ps-xxl-1 form-label lead">Desde:</label>
+        <input type="date" class="ms-1 me-3 form-control cw" id="startDate" v-model="sDate" @change="initial">
+        <label for="endDate" class="form-label lead">Hasta:</label>
+        <input type="date" class="ms-1 form-control cw" id="endDate" v-model="eDate" @change="initial">
+        <button class="btn btn-primary ms-4 ms-xxl-5" @click="generatePDF" type="button"><i class="bi bi-printer"></i></button>
+        <button class="btn btn-primary ms-4 ms-xxl-3" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button>
+        <!-- <button class="btn btn-primary d-xxl-none float-end ms-3" style="margin-top: 1.6rem" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button> -->
+      </div>
+    </div>
+    <!-- <div class="d-flex float-start col-2 me-5 ps-xxl-5" style="margin-left: 5.2rem!important">
       <VueMultiselect
                   v-model="tipMov"
                   :options="movOptions"
@@ -1433,8 +1455,8 @@ onMounted(() => {
       <input type="date" class="ms-1 form-control cw" id="endDate" v-model="eDate" @change="initial">
       <button class="btn btn-primary ms-4 ms-xxl-5" @click="generatePDF" type="button"><i class="bi bi-printer"></i></button>
       <button class="btn btn-primary ms-4 ms-xxl-3" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button>
-      <!-- <button class="btn btn-primary d-xxl-none float-end ms-3" style="margin-top: 1.6rem" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button> -->
-    </div>
+      <button class="btn btn-primary d-xxl-none float-end ms-3" style="margin-top: 1.6rem" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button>
+    </div> -->
 
     <div class="modal fade" id="newItemModal" tabindex="-1" aria-labelledby="newItemModal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg">
