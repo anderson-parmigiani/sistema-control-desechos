@@ -160,7 +160,6 @@ const generatePDF = () => {
     html: '#tab', 
     startY: 30, 
     didDrawPage: data => {
-      // Header
       data.settings.margin.top = 30;
       pdf.setFontSize(8);
       pdf.setTextColor(40);
@@ -173,11 +172,8 @@ const generatePDF = () => {
       pdf.text(`Fecha: ${getDateInfo(Date.now())}`, data.settings.margin.left, 20);      
       pdf.text(`Peso Final: ${Number.isInteger(sumTotal.value) ? sumTotal.value : parseFloat(sumTotal.value.toFixed(4))} kg`, data.settings.margin.left, 25);
 
-      // Footer
       var str = "" + pdf.getNumberOfPages();
-
       pdf.setFontSize(10);
-
       var pageSize = pdf.internal.pageSize;
       var pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
       pdf.text(str, 195, pageHeight - 10);
@@ -185,7 +181,6 @@ const generatePDF = () => {
   })
 
   pdf.save(`Reporte.pdf`);
-
 }
 
 onMounted(() => {
@@ -240,14 +235,14 @@ onMounted(() => {
           </div>
           <div class="modal-body">
             <p>Se eliminaran todos los registros asociados al desecho.</p>
-              <div class="modal-footer">
-                <button v-if ="!adding" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(false)>Cancelar</button>
-                <button v-if ="!adding" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(true)>Aceptar</button>
-                <button v-else class="btn btn-primary" type="button" disabled>
-                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                  Eliminando...
-                </button>
-              </div>
+            <div class="modal-footer">
+              <button v-if ="!adding" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(false)>Cancelar</button>
+              <button v-if ="!adding" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(true)>Aceptar</button>
+              <button v-else class="btn btn-primary" type="button" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Eliminando...
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -270,7 +265,6 @@ onMounted(() => {
       </div>
       <div class="col-3"></div>
     </div>
-
   </div>
 </template>
 
@@ -337,10 +331,6 @@ onMounted(() => {
 .valid .multiselect__tags {
   border-color: #198754!important;
 }
-
-/* .cm {
-  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
-} */
 
 .mc {
   margin-left: 15.5rem;

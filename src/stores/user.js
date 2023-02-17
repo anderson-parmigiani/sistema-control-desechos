@@ -7,7 +7,6 @@ import router from '../router';
 
 export const useUserStore = defineStore('userStore', () => {
   const userData = ref(null);
-  // const loading = ref(false);
   const loadingUser = ref(false);
   const wait = ref(null);
   const defaultPhoto = 'https://firebasestorage.googleapis.com/v0/b/sistema-control-desechos.appspot.com/o/images%2Fusers%2Fblue.png?alt=media&token=56acc29d-ff0a-4bc7-83cc-a6dde3556cf3';
@@ -25,8 +24,8 @@ export const useUserStore = defineStore('userStore', () => {
       return 'Se ha enviado un correo de verificación.';
       
     } catch (error) {
-        console.log(error.code, error.message);
-        return 'Hubo un problema.';
+      console.log(error.code, error.message);
+      return 'Hubo un problema.';
 
     } finally {
       loadingUser.value = false;
@@ -115,7 +114,6 @@ export const useUserStore = defineStore('userStore', () => {
   };
 
   const updateName = async name => {
-
     try {
       await updateProfile(auth.currentUser, { displayName: name});
       userData.value = {...userData.value, name};
@@ -128,7 +126,6 @@ export const useUserStore = defineStore('userStore', () => {
   };
 
   const updatePhoto = async url => {
-
     try {
       await updateProfile(auth.currentUser, { photoURL: url});
       userData.value = {...userData.value, photo: url};
@@ -145,7 +142,6 @@ export const useUserStore = defineStore('userStore', () => {
     router,
     userData,
     wait,
-    // loading,
     loadingUser,
     createUser,
     login,

@@ -41,11 +41,11 @@ const selectPhoto = async e => {
 const uploadPhoto = async () => {
     try {
         if(image.value !== null && image.value !== undefined){
-        const storageRef = fileRef(storage, `images/users/${image.value.name}`);
-        const metaData = { contentType: 'image/png'};
+            const storageRef = fileRef(storage, `images/users/${image.value.name}`);
+            const metaData = { contentType: 'image/png'};
 
-        await uploadBytes(storageRef, image.value, metaData);
-        await loadPhoto()
+            await uploadBytes(storageRef, image.value, metaData);
+            await loadPhoto()
         };
 
     } catch (error) {
@@ -125,7 +125,6 @@ const associateRacda = async () => {
                     </div>
                     <div :class="`alert ${res == 'Informacion actualizada.' ? 'alert-success' : 'alert-danger'} mt-4 text-center`" role="alert" v-if="res">{{ res }}</div>
                 </form>
-
             </div>
             <div class="col d-none d-sm-block"></div>
         </div>

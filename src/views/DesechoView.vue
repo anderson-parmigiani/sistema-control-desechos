@@ -65,7 +65,6 @@ const movOptions = ['Todos', 'Entradas', 'Salidas'];
 
 
 const getName = async () => {
-
   try {
     const q = query(collection(db, "desecho"), where("uid", "==", userStore.userData.uid));
     const querySnapshot = await getDocs(q);
@@ -73,9 +72,9 @@ const getName = async () => {
     querySnapshot.forEach((doc) => {
       dat.push({... doc.data()});
     });
+
     nombreDesecho.value = dat.find((item) => item.desechoID === route.params.name);
     dat.length = 0;
-
   } catch (error) {
     console.log(error.code, error.message);
   }
@@ -265,7 +264,6 @@ const initial = async () => {
   nextDisabled.value = true;
 
   try {
-
     var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"));
     var qt = q
     spac.value = true;
@@ -364,11 +362,7 @@ const initial = async () => {
       showData(pdfTabCont, data, doc.id);
       sum.value += data.cp;
     })
-    // console.log(allFiltData[1]);
-
-    // if(tipMov.value !== 'Todos'){
       hideCP.value = false;
-    // }
 
     if(querySnapshot.docs.length === 7){
     }
@@ -1040,7 +1034,6 @@ const generatePDF = () => {
     html: '#pdftable-content', 
     startY: 33, 
     didDrawPage: data => {
-      // Header
       data.settings.margin.top = 33;
       pdf.setFontSize(8);
       pdf.setTextColor(40);
@@ -1067,7 +1060,7 @@ const generatePDF = () => {
 
       pdf.text(`Movimientos: ${tipMov.value}`, data.settings.margin.left, 25);
       pdf.text(`Peso Final: ${Number.isInteger(sum.value) ? sum.value : parseFloat(sum.value.toFixed(4))} kg`, data.settings.margin.left, 30);
-      // Footer
+
       var str = "" + pdf.getNumberOfPages();
 
       pdf.setFontSize(10);
@@ -1125,12 +1118,10 @@ const showGraphic = () => {
 
   if((tipMov.value !== 'Todos')){
     cpmA.reverse();
-    // console.log(cpmA);
     all = critPoints(cpmA);
     if(all.length > 12){
       all = all.slice(-12);
     }
-    // console.log(all);
   }
   else {
     cpmA.forEach(i => {
@@ -1145,8 +1136,6 @@ const showGraphic = () => {
     });
     cpmAG.reverse();
     cpmAR.reverse();
-    // console.log(cpmAG);
-    // console.log(cpmAR);
     green = critPoints(cpmAG);
     red = critPoints(cpmAR);
 
@@ -1156,8 +1145,6 @@ const showGraphic = () => {
     if(red.length > 12){
       red = red.slice(-12);
     }
-    // console.log(green);
-    // console.log(red);
   }
 
   if(tipMov.value !== 'Todos'){
@@ -1166,7 +1153,6 @@ const showGraphic = () => {
       uniquemA.length = 12;
     }
     uniquemA.reverse();
-    // console.log(uniquemA);
   }
   else {
     uniquemAG = [...new Set(mAG)];
@@ -1174,26 +1160,21 @@ const showGraphic = () => {
       uniquemAG.length = 12;
     }
     uniquemAG.reverse();
-    // console.log(uniquemAG);
     for(let i = 0; i < uniquemAG.length; i++){
       finalmAG.push({x: uniquemAG[i], y: green[i]}) 
     }
-    // console.log(finalmAG);
 
     uniquemAR = [...new Set(mAR)];
     if(uniquemAR.length > 12){
       uniquemAR.length = 12;
     }
     uniquemAR.reverse();
-    // console.log(uniquemAR);
     for(let i = 0; i < uniquemAR.length; i++){
       finalmAR.push({x: uniquemAR[i], y: red[i]}) 
     }
-    // console.log(finalmAR);
   }
 
   if(tipMov.value !== 'Todos'){
-    // console.log('entro en individual');
     data = {
       labels: uniquemA,
       datasets: [
@@ -1209,7 +1190,6 @@ const showGraphic = () => {
     };
   }
   else{
-    // console.log('entro en todos');
     data = {
       datasets: [
         {
@@ -1258,14 +1238,12 @@ const showGraphic = () => {
       },
       scales: {
         x: {
-          // stacked: true,
           title: {
             display: tipMov.value == 'Todos' ? false : true,
             text: 'Mes-Año',
           },
         },
         x1: {
-          // stacked: true,
           display: tipMov.value !== 'Todos' ? false : true,
           title: {
             display: true,
@@ -1275,7 +1253,6 @@ const showGraphic = () => {
           labels: uniquemAG,
         },
         x2: {
-          // stacked: true,
           display: tipMov.value !== 'Todos' ? false : true,
           title: {
             display: true,
@@ -1284,11 +1261,9 @@ const showGraphic = () => {
           position: 'bottom',
           labels: uniquemAR,
           grid: {
-            // drawOnChartArea: false,
           },
         },
         y: {
-          // stacked: true,
           title: {
             display: true,
             text: 'Kg'
@@ -1319,7 +1294,6 @@ const critPoints = data => {
     actual = data[i];
 
     if(data.length - 1 == i){
-      // console.log('Entro 0');
       next = {}
       if(addCP !== 0) {
         finalCP.push(addCP);
@@ -1333,25 +1307,20 @@ const critPoints = data => {
       next = data[i+1];
 
       if(i == 0 && actual.fecha == next.fecha){
-        // console.log('Entro 1');
         addCP += actual.cp + next.cp;
       }
       else if(i == 0 && actual.fecha !== next.fecha){
-        // console.log('Entro 4');
         addCP = actual.cp;
         finalCP.push(addCP);
         addCP = next.cp;
       }
       else if(actual.fecha == next.fecha){
-        // console.log('Entro 2');
         addCP += next.cp;
       }
       else{
-        // console.log('Entro 3');
         if(addCP !== 0){
           finalCP.push(addCP);
         }
-        // addCP = 0;
         addCP = next.cp;
       }
     }
@@ -1398,7 +1367,6 @@ onMounted(() => {
         <div class="ms-1 pt-1 mt-2">Salida</div>
       </div>
       <button v-if="userStore.wait == 1" class="btn btn-primary ms-auto mt-3 mt-xxl-4" type="button" data-bs-toggle="modal" data-bs-target="#newItemModal" @click="refresh"><i class="bi bi-plus-lg" style="font-size: 20px;"></i></button>
-      <!-- <button v-if="userStore.wait == 1" class="btn btn-primary ms-3 mt-3 mt-xxl-4" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill" style="font-size: 20px;"></i></button> -->
       <p v-if="userStore.wait == 2" class="text-danger ms-auto mt-3 mt-xxl-4">Renueve el Racda</p>
       <p v-if="userStore.wait == 3" class="text-warning ms-auto mt-3 mt-xxl-4">Ingrese el Racda</p>
     </div>
@@ -1413,7 +1381,6 @@ onMounted(() => {
       <div class="cuadrado-r ts ms-5 rounded-circle"></div>
       <div class="ms-1 pt-3 mt-3">Salida</div>
     </div>
-    <!-- <button v-if="userStore.wait == 1" class="btn btn-primary d-xxl-none float-end ms-3" style="margin-top: 1.6rem" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill" style="font-size: 20px;"></i></button> -->
     <button v-if="userStore.wait == 1" class="btn btn-primary d-xxl-none float-end" style="margin-top: 1.6rem" type="button" data-bs-toggle="modal" data-bs-target="#newItemModal" @click="refresh"><i class="bi bi-plus-lg" style="font-size: 20px;"></i></button>
     <div class="d-flex float-start ">
       <div class="col-3 me-xl-5 me-3 ps-xxl-5 pe-5 pe-xl-4" style="margin-left: 5.2rem!important">
@@ -1434,274 +1401,250 @@ onMounted(() => {
         <input type="date" class="ms-1 form-control cw" id="endDate" v-model="eDate" @change="initial">
         <button class="btn btn-primary ms-4 ms-xxl-5" @click="generatePDF" type="button"><i class="bi bi-printer"></i></button>
         <button class="btn btn-primary ms-4 ms-xxl-3" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button>
-        <!-- <button class="btn btn-primary d-xxl-none float-end ms-3" style="margin-top: 1.6rem" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button> -->
       </div>
     </div>
-    <!-- <div class="d-flex float-start col-2 me-5 ps-xxl-5" style="margin-left: 5.2rem!important">
-      <VueMultiselect
-                  v-model="tipMov"
-                  :options="movOptions"
-                  :searchable="false"
-                  :allow-empty="false"
-                  :show-labels="false"
-                  placeholder="Todos"
-                  @select="initial"
-      />
-    </div>
-    <div class="mb-0 mb-xxl-4">
-      <label for="startDate" class="ms-5 form-label lead">Desde:</label>
-      <input type="date" class="ms-1 me-3 form-control cw" id="startDate" v-model="sDate" @change="initial">
-      <label for="endDate" class="form-label lead">Hasta:</label>
-      <input type="date" class="ms-1 form-control cw" id="endDate" v-model="eDate" @change="initial">
-      <button class="btn btn-primary ms-4 ms-xxl-5" @click="generatePDF" type="button"><i class="bi bi-printer"></i></button>
-      <button class="btn btn-primary ms-4 ms-xxl-3" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button>
-      <button class="btn btn-primary d-xxl-none float-end ms-3" style="margin-top: 1.6rem" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button>
-    </div> -->
 
     <div class="modal fade" id="newItemModal" tabindex="-1" aria-labelledby="newItemModal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-              <h1 class="modal-title fs-5" id="newItemModalLabel">Movimiento de desecho</h1>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <form @submit.prevent="checkData" :class="`row g-3 ${validate}`" novalidate>
-                <div class="col-3 mt-3">
-                  <label for="fecha" class="form-label">Fecha*</label>
-                  <input type="date" :class="`form-control ${sf}`" id="fecha" v-model="fecha" required>
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="newItemModalLabel">Movimiento de desecho</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="checkData" :class="`row g-3 ${validate}`" novalidate>
+              <div class="col-3 mt-3">
+                <label for="fecha" class="form-label">Fecha*</label>
+                <input type="date" :class="`form-control ${sf}`" id="fecha" v-model="fecha" required>
+              </div>
+              <div class="col-3 mt-3">
+                <label for="hora" class="form-label">Hora*</label>
+                <input type="time" :class="`form-control ${sh}`" id="hora" v-model="hora" required>
+              </div>
+              <div class="col-3 mt-3">
+                <label for="CP" class="form-label">Peso*</label>
+                <input type="number" step="0.001" :class="`form-control ${scp}`" id="CP" v-model="cp" required>
+              </div>
+              <div :class="`col-3 mt-3 ${su}`">
+                <label class="form-label">Unidades*</label>
+                <VueMultiselect
+                v-model="selectedCP"
+                :options="cpOptions"
+                :allow-empty="false"
+                :show-labels="false"
+                placeholder="..."
+                />
+              </div>
+              <div v-if="!directoryTrans" class="col-5">
+                <label for="trans" class="form-label">Empresa de Transporte</label>
+                <VueMultiselect
+                v-model="empTrans"
+                :options="daTransFilt"
+                :show-labels="false"
+                placeholder="..."
+                />
+              </div>
+              <div v-if="directoryTrans" class="col-3">
+                <label for="inputNameRif" class="form-label">Rif - Emp. Transporte*</label>
+                <div class="input-group">
+                  <span class="input-group-text">J-</span>
+                  <input type="number" class="form-control" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rifTrans" required>
                 </div>
-                <div class="col-3 mt-3">
-                  <label for="hora" class="form-label">Hora*</label>
-                  <input type="time" :class="`form-control ${sh}`" id="hora" v-model="hora" required>
+              </div>
+              <div class="col-1 mt-5 text-center">
+                <i v-if="!directoryTrans" class="bi bi-pencil-square" style="font-size: 25px; cursor: pointer" @click="testy('Trans')"></i>
+                <i v-else class="bi bi-folder" style="font-size: 25px; cursor: pointer" @click="testy('Trans')"></i>
+              </div>
+              <div v-if="directoryTrat && !directoryTrans" class="col-6"></div>
+              <div v-if="directoryTrans" class="col-3">
+                <label for="racTrans" class="form-label">Venc. RACDA*</label>
+                <input type="date" class="form-control" id="racTrans" v-model="racdaTrans" required>
+              </div>
+              <div v-if="directoryTrans" class="col-5">
+                <label for="trans" class="form-label">Empresa de Transporte*</label>
+                <input type="text" class="form-control" id="trans" v-model="empTrans" required>
+              </div>
+              <div v-if="!directoryTrat" class="col-5">
+                <label for="trat" class="form-label">Empresa Tratante</label>
+                <VueMultiselect
+                v-model="empTrat"
+                :options="daTratFilt"
+                :show-labels="false"
+                placeholder="..."
+                />
+              </div>
+              <div v-if="directoryTrat" class="col-3">
+                <label for="inputNameRif" class="form-label">Rif - Emp. Tratante*</label>
+                <div class="input-group">
+                  <span class="input-group-text">J-</span>
+                  <input type="number" class="form-control" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rifTrat" required>
                 </div>
-                <div class="col-3 mt-3">
-                  <label for="CP" class="form-label">Peso*</label>
-                  <input type="number" step="0.001" :class="`form-control ${scp}`" id="CP" v-model="cp" required>
-                </div>
-                <div :class="`col-3 mt-3 ${su}`">
-                  <label class="form-label">Unidades*</label>
-                  <VueMultiselect
-                  v-model="selectedCP"
-                  :options="cpOptions"
-                  :allow-empty="false"
-                  :show-labels="false"
-                  placeholder="..."
-                  />
-                </div>
-                <div v-if="!directoryTrans" class="col-5">
-                  <label for="trans" class="form-label">Empresa de Transporte</label>
-                  <VueMultiselect
-                  v-model="empTrans"
-                  :options="daTransFilt"
-                  :show-labels="false"
-                  placeholder="..."
-                  />
-                </div>
-                <div v-if="directoryTrans" class="col-3">
-                  <label for="inputNameRif" class="form-label">Rif - Emp. Transporte*</label>
-                  <div class="input-group">
-                    <span class="input-group-text">J-</span>
-                    <input type="number" class="form-control" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rifTrans" required>
-                  </div>
-                </div>
-                <div class="col-1 mt-5 text-center">
-                  <i v-if="!directoryTrans" class="bi bi-pencil-square" style="font-size: 25px; cursor: pointer" @click="testy('Trans')"></i>
-                  <i v-else class="bi bi-folder" style="font-size: 25px; cursor: pointer" @click="testy('Trans')"></i>
-                </div>
-                <div v-if="directoryTrat && !directoryTrans" class="col-6"></div>
-                <div v-if="directoryTrans" class="col-3">
-                  <label for="racTrans" class="form-label">Venc. RACDA*</label>
-                  <input type="date" class="form-control" id="racTrans" v-model="racdaTrans" required>
-                </div>
-                <div v-if="directoryTrans" class="col-5">
-                  <label for="trans" class="form-label">Empresa de Transporte*</label>
-                  <input type="text" class="form-control" id="trans" v-model="empTrans" required>
-                </div>
-                <div v-if="!directoryTrat" class="col-5">
-                  <label for="trat" class="form-label">Empresa Tratante</label>
-                  <VueMultiselect
-                  v-model="empTrat"
-                  :options="daTratFilt"
-                  :show-labels="false"
-                  placeholder="..."
-                  />
-                </div>
-                <div v-if="directoryTrat" class="col-3">
-                  <label for="inputNameRif" class="form-label">Rif - Emp. Tratante*</label>
-                  <div class="input-group">
-                    <span class="input-group-text">J-</span>
-                    <input type="number" class="form-control" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rifTrat" required>
-                  </div>
-                </div>
-                <div class="col-1 mt-5 text-center">
-                  <i v-if="!directoryTrat" class="bi bi-pencil-square" style="font-size: 25px; cursor: pointer" @click="testy('Trat')"></i>
-                  <i v-else class="bi bi-folder" style="font-size: 25px; cursor: pointer" @click="testy('Trat')"></i>
-                </div>
-                <div v-if="directoryTrat" class="col-3">
-                  <label for="racTrat" class="form-label">Venc. RACDA*</label>
-                  <input type="date" class="form-control" id="racTrat" v-model="racdaTrat" required>
-                </div>
-                <div v-if="directoryTrat" class="col-5">
-                  <label for="trat" class="form-label">Empresa Tratante*</label>
-                  <input type="text" class="form-control" id="trat" v-model="empTrat" required>
-                </div>
-                <div class="form-group">
-                  <label for="exampleFormControlTextarea1">Comentario</label>
-                  <textarea class="form-control" id="exampleFormControlTextarea1" maxlength="100" rows="2" v-model="com"></textarea>
-                </div>
-                <div class="modal-footer">
-                  <p class="me-auto mb-auto">Para salidas escribir el símbolo (-) en el campo peso.</p>
-                  <span class="me-auto mb-auto">(*) = campo requerido.</span>
-                  <button v-if ="!adding" type="submit" class="btn btn-primary">Registrar</button>
-                  <button v-else class="btn btn-primary" type="button" disabled>
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    Registrando...
-                  </button>
-                </div>
-              </form>
-            </div>
+              </div>
+              <div class="col-1 mt-5 text-center">
+                <i v-if="!directoryTrat" class="bi bi-pencil-square" style="font-size: 25px; cursor: pointer" @click="testy('Trat')"></i>
+                <i v-else class="bi bi-folder" style="font-size: 25px; cursor: pointer" @click="testy('Trat')"></i>
+              </div>
+              <div v-if="directoryTrat" class="col-3">
+                <label for="racTrat" class="form-label">Venc. RACDA*</label>
+                <input type="date" class="form-control" id="racTrat" v-model="racdaTrat" required>
+              </div>
+              <div v-if="directoryTrat" class="col-5">
+                <label for="trat" class="form-label">Empresa Tratante*</label>
+                <input type="text" class="form-control" id="trat" v-model="empTrat" required>
+              </div>
+              <div class="form-group">
+                <label for="exampleFormControlTextarea1">Comentario</label>
+                <textarea class="form-control" id="exampleFormControlTextarea1" maxlength="100" rows="2" v-model="com"></textarea>
+              </div>
+              <div class="modal-footer">
+                <p class="me-auto mb-auto">Para salidas escribir el símbolo (-) en el campo peso.</p>
+                <span class="me-auto mb-auto">(*) = campo requerido.</span>
+                <button v-if ="!adding" type="submit" class="btn btn-primary">Registrar</button>
+                <button v-else class="btn btn-primary" type="button" disabled>
+                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  Registrando...
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
+    </div>
         
-        <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModal" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-          <div class="modal-content">
-              <div class="modal-header">
-                <h1 class="modal-title fs-5" id="editItemModalLabel">Modificar movimiento</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModal" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="editItemModalLabel">Modificar movimiento</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="edit" :class="`row g-3 ${validate}`" novalidate>
+              <div class="col-3 mt-3">
+                <label for="fecha" class="form-label">Fecha*</label>
+                <input type="date" :class="`form-control ${sf}`" id="fecha" v-model="fecha" required>
               </div>
-              <div class="modal-body">
-                <form @submit.prevent="edit" :class="`row g-3 ${validate}`" novalidate>
-                  <div class="col-3 mt-3">
-                    <label for="fecha" class="form-label">Fecha*</label>
-                    <input type="date" :class="`form-control ${sf}`" id="fecha" v-model="fecha" required>
-                  </div>
-                  <div class="col-3 mt-3">
-                    <label for="hora" class="form-label">Hora*</label>
-                    <input type="time" :class="`form-control ${sh}`" id="hora" v-model="hora" required>
-                  </div>
-                  <div class="col-3 mt-3">
-                    <label for="CP" class="form-label">Peso*</label>
-                    <input type="number" step="0.001" :class="`form-control ${scp}`" id="CP" v-model="cp" required>
-                  </div>
-                  <div :class="`col-3 mt-3 ${su}`">
-                    <label class="form-label">Unidades*</label>
-                    <VueMultiselect
-                    v-model="selectedCP"
-                    :options="cpOptions"
-                    :allow-empty="false"
-                    :show-labels="false"
-                    placeholder="..."
-                    />
-                  </div>
-                  <div class="col-6">
-                    <label for="trans" class="form-label">Empresa de Transporte</label>
-                    <VueMultiselect v-if="!directoryTrans"
-                    v-model="empTrans"
-                    :options="daTransFilt"
-                    :show-labels="false"
-                    placeholder="..."
-                    />
-                  </div>
-                  <div class="col-6">
-                    <label for="trat" class="form-label">Empresa Tratante</label>
-                    <VueMultiselect v-if="!directoryTrat"
-                    v-model="empTrat"
-                    :options="daTratFilt"
-                    :show-labels="false"
-                    placeholder="..."
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label for="exampleFormControlTextarea1">Comentario</label>
-                    <textarea class="form-control" id="exampleFormControlTextarea1" maxlength="100" rows="2" v-model="com"></textarea>
-                  </div>
-                  <div class="modal-footer">
-                    <p class="me-auto mb-auto">Para salidas escribir el símbolo (-) en el campo peso.</p>
-                    <span class="me-auto mb-auto">(*) = campo requerido.</span>
-                    <button v-if ="!adding" type="submit" class="btn btn-primary">Editar</button>
-                    <button v-else class="btn btn-primary" type="button" disabled>
-                      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                      Editando...
-                    </button>
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-hidden="true" id="disEdit" hidden></button>
-                  </div>
-                </form>
+              <div class="col-3 mt-3">
+                <label for="hora" class="form-label">Hora*</label>
+                <input type="time" :class="`form-control ${sh}`" id="hora" v-model="hora" required>
               </div>
-            </div>
+              <div class="col-3 mt-3">
+                <label for="CP" class="form-label">Peso*</label>
+                <input type="number" step="0.001" :class="`form-control ${scp}`" id="CP" v-model="cp" required>
+              </div>
+              <div :class="`col-3 mt-3 ${su}`">
+                <label class="form-label">Unidades*</label>
+                <VueMultiselect
+                v-model="selectedCP"
+                :options="cpOptions"
+                :allow-empty="false"
+                :show-labels="false"
+                placeholder="..."
+                />
+              </div>
+              <div class="col-6">
+                <label for="trans" class="form-label">Empresa de Transporte</label>
+                <VueMultiselect v-if="!directoryTrans"
+                v-model="empTrans"
+                :options="daTransFilt"
+                :show-labels="false"
+                placeholder="..."
+                />
+              </div>
+              <div class="col-6">
+                <label for="trat" class="form-label">Empresa Tratante</label>
+                <VueMultiselect v-if="!directoryTrat"
+                v-model="empTrat"
+                :options="daTratFilt"
+                :show-labels="false"
+                placeholder="..."
+                />
+              </div>
+              <div class="form-group">
+                <label for="exampleFormControlTextarea1">Comentario</label>
+                <textarea class="form-control" id="exampleFormControlTextarea1" maxlength="100" rows="2" v-model="com"></textarea>
+              </div>
+              <div class="modal-footer">
+                <p class="me-auto mb-auto">Para salidas escribir el símbolo (-) en el campo peso.</p>
+                <span class="me-auto mb-auto">(*) = campo requerido.</span>
+                <button v-if ="!adding" type="submit" class="btn btn-primary">Editar</button>
+                <button v-else class="btn btn-primary" type="button" disabled>
+                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  Editando...
+                </button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-hidden="true" id="disEdit" hidden></button>
+              </div>
+            </form>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div class="modal fade" id="infoItemModal" tabindex="-1" aria-labelledby="infoItemModal" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-              <div class="modal-header">
-                <h1 class="modal-title fs-5" id="infoItemModalLabel">Información</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal fade" id="infoItemModal" tabindex="-1" aria-labelledby="infoItemModal" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="infoItemModalLabel">Información</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="" :class="`row g-3 ${validate}`" novalidate>
+              <div class="col-7 mt-3">
+                <label for="CP" class="form-label">Peso</label>
+                <input type="number" step="0.001" :class="`form-control ${scp}`" id="CP" v-model="cp" readonly required>
               </div>
-              <div class="modal-body">
-                <form @submit.prevent="" :class="`row g-3 ${validate}`" novalidate>
-                  <div class="col-7 mt-3">
-                    <label for="CP" class="form-label">Peso</label>
-                    <input type="number" step="0.001" :class="`form-control ${scp}`" id="CP" v-model="cp" readonly required>
-                  </div>
-                  <div class="col-1"></div>
-                  <div :class="`col-4 mt-3 ${su}`">
-                    <label for="unidades" class="form-label">Unidades</label>
-                    <input type="text" class="form-control" id="unidades" v-model="selectedCP" readonly required>
-                  </div>
-                  <div class="col-7 mt-3">
-                    <label for="fecha" class="form-label">Fecha</label>
-                    <input type="date" :class="`form-control ${sf}`" id="fecha" v-model="fecha" readonly required>
-                  </div>
-                  <div class="col-1"></div>
-                  <div class="col-4 mt-3">
-                    <label for="hora" class="form-label">Hora</label>
-                    <input type="time" :class="`form-control ${sh}`" id="hora" v-model="hora" readonly required>
-                  </div>
-                  <div class="col-6">
-                    <label for="trans" class="form-label">Empresa de Transporte</label>
-                    <input type="text" class="form-control" id="trans" v-model="empTrans" readonly required>
-                  </div>
-                  <div class="col-6">
-                    <label for="trat" class="form-label">Empresa Tratante</label>
-                    <input type="text" class="form-control" id="trat" v-model="empTrat" readonly required>
-                  </div>
-                  <div class="form-group">
-                    <label for="exampleFormControlTextarea1">Comentario</label>
-                    <textarea class="form-control" id="exampleFormControlTextarea1" maxlength="60" rows="2" v-model="com" readonly required></textarea>
-                  </div>
-                </form>
+              <div class="col-1"></div>
+              <div :class="`col-4 mt-3 ${su}`">
+                <label for="unidades" class="form-label">Unidades</label>
+                <input type="text" class="form-control" id="unidades" v-model="selectedCP" readonly required>
               </div>
-            </div>
+              <div class="col-7 mt-3">
+                <label for="fecha" class="form-label">Fecha</label>
+                <input type="date" :class="`form-control ${sf}`" id="fecha" v-model="fecha" readonly required>
+              </div>
+              <div class="col-1"></div>
+              <div class="col-4 mt-3">
+                <label for="hora" class="form-label">Hora</label>
+                <input type="time" :class="`form-control ${sh}`" id="hora" v-model="hora" readonly required>
+              </div>
+              <div class="col-6">
+                <label for="trans" class="form-label">Empresa de Transporte</label>
+                <input type="text" class="form-control" id="trans" v-model="empTrans" readonly required>
+              </div>
+              <div class="col-6">
+                <label for="trat" class="form-label">Empresa Tratante</label>
+                <input type="text" class="form-control" id="trat" v-model="empTrat" readonly required>
+              </div>
+              <div class="form-group">
+                <label for="exampleFormControlTextarea1">Comentario</label>
+                <textarea class="form-control" id="exampleFormControlTextarea1" maxlength="60" rows="2" v-model="com" readonly required></textarea>
+              </div>
+            </form>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div class="modal fade" id="graphicModal" tabindex="-1" aria-labelledby="graphicModal" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <!-- <div class="modal-header">
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div> -->
-                <div class="modal-body">
-                  <canvas id="graphic"></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3">
-          <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div :class="`d-flex ${msgColor}`">
-              <div :class="`toast-body text-center ${msgColor == 'text-bg-danger' ? 'small' : ''}`">
-                {{ res }}
-              </div>
-              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
+    <div class="modal fade" id="graphicModal" tabindex="-1" aria-labelledby="graphicModal" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-body">
+            <canvas id="graphic"></canvas>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3">
+      <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div :class="`d-flex ${msgColor}`">
+          <div :class="`toast-body text-center ${msgColor == 'text-bg-danger' ? 'small' : ''}`">
+            {{ res }}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
 
     <table class="table table-hover table-fixed">
       <thead>
@@ -1741,19 +1684,18 @@ onMounted(() => {
           </div>
           <div class="modal-body">
             <p>Se eliminará el registro.</p>
-              <div class="modal-footer">
-                <button v-if ="!adding" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(false)>Cancelar</button>
-                <button v-if ="!adding" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(true)>Aceptar</button>
-                <button v-else class="btn btn-primary" type="button" disabled>
-                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                  Eliminando...
-                </button>
-              </div>
+            <div class="modal-footer">
+              <button v-if ="!adding" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(false)>Cancelar</button>
+              <button v-if ="!adding" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(true)>Aceptar</button>
+              <button v-else class="btn btn-primary" type="button" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Eliminando...
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
   </div>
 </template>
 

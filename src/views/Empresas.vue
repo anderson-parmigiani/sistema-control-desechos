@@ -37,12 +37,10 @@ const addItem = async (type, emp) => {
   else if(name.value == null){
     nm.value = 'invalid';
     showMessage('Ingrese el nombre.', 'text-bg-danger');
-    // res.value = 'Ingrese el nombre';
   }
   else{
     nm.value = 'invalid';
     showMessage('La empresa ya existe.', 'text-bg-danger');
-    // res.value = 'La empresa ya existe';
   }
 
   if(rif.value !== null){
@@ -58,7 +56,6 @@ const addItem = async (type, emp) => {
   else if(racda.value !== null && new Date(racda.value) < Date.now()){
     rac.value = 'invalid';
     showMessage('Racda vencido.', 'text-bg-danger');
-    // res.value = 'Racda vencido';
   }
   else{
     rac.value = 'invalid';
@@ -91,7 +88,7 @@ const addItem = async (type, emp) => {
     }
   }
   else{
-      validate.value = 'was-validated';
+    validate.value = 'was-validated';
   }
 }
 
@@ -222,7 +219,6 @@ const edit = async() => {
   else if(racda.value !== null && new Date(racda.value) < Date.now()){
     rac.value = 'invalid';
     showMessage('Racda vencido.', 'text-bg-danger');
-    // res.value = 'Racda vencido';
   }
   else{
     rac.value = 'invalid';
@@ -279,172 +275,167 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="container-xxl">
-        <div class="modal fade" id="tratanteModal" tabindex="-1" aria-labelledby="tratanteModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="tratanteModalLabel">Empresa Tratante</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form @submit.prevent="addItem('empTrat', dTrat)" :class="`row g-3 fm ${validate}`" novalidate>
-                    <div class="col-12">
-                      <label for="inputNameTrat" class="form-label">Nombre</label>
-                      <input type="text" :class="`form-control ${nm}`" id="inputNameTrat" v-model="name" required>
-                    </div>
-                    <div class="col-6">
-                      <label for="inputNameRif" class="form-label">Rif</label>
-                      <div class="input-group">
-                        <span class="input-group-text">J-</span>
-                        <input type="number" :class="`form-control ${rv}`" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rif" required>
-                      </div>
-                    </div>
-                    <div class="col-6">
-                      <label for="inputRacdaTrat" class="form-label">Venc. RACDA</label>
-                      <input type="date" :class="`form-control ${rac}`" id="inputRacdaTrat" v-model="racda" required>
-                    </div>
-                    <!-- <div class="alert alert-danger mt-3 py-1 mb-0 text-center" role="alert" v-if="res">{{ res }}</div> -->
-                    <div class="modal-footer">
-                        <button v-if = !cargando type="submit" class="btn btn-primary">Registrar</button>
-                        <button v-else class="btn btn-primary" type="button" disabled>
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        Registrando...
-                        </button>
-                    </div>
-                    </form>
-                </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="transporteModal" tabindex="-1" aria-labelledby="transporteModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="transporteModalLabel">Empresa de Transporte</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form @submit.prevent="addItem('empTrans', dTrans)" :class="`row g-3 fm ${validate}`" novalidate>
-                    <div class="col-12">
-                        <label for="inputNameTrans" class="form-label">Nombre</label>
-                        <input type="text" :class="`form-control ${nm}`" id="inputNameTrans" v-model="name" required>
-                    </div>
-                    <div class="col-6">
-                      <label for="inputNameRif" class="form-label">Rif</label>
-                      <div class="input-group">
-                        <span class="input-group-text">J-</span>
-                        <input type="number" :class="`form-control ${rv}`" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rif" required>
-                      </div>
-                    </div>
-                    <div class="col-6">
-                      <label for="inputRacdaTrans" class="form-label">Venc. RACDA</label>
-                      <input type="date" :class="`form-control ${rac}`" id="inputRacdaTrans" v-model="racda" required>
-                    </div>
-                    <!-- <div class="alert alert-danger mt-3 py-1 mb-0 text-center" role="alert" v-if="res">{{ res }}</div> -->
-                    <div class="modal-footer">
-                        <button v-if = !cargando type="submit" class="btn btn-primary">Registrar</button>
-                        <button v-else class="btn btn-primary" type="button" disabled>
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        Registrando...
-                        </button>
-                    </div>
-                    </form>
-                </div>
-
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="tratEditModal" tabindex="-1" aria-labelledby="tratEditModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="tratEdilModalLabel">{{typeN}}</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form @submit.prevent="edit" :class="`row g-3 ${validate}`" novalidate>
-                    <div class="col-12">
-                        <label for="inputNameTrat" class="form-label">Nombre</label>
-                        <input type="text" :class="`form-control ${nm}`" id="inputNameTrat" v-model="name" required>
-                    </div>
-                    <div class="col-6">
-                      <label for="inputNameRif" class="form-label">Rif</label>
-                      <div class="input-group">
-                        <span class="input-group-text">J-</span>
-                        <input type="number" :class="`form-control ${rv}`" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rif" required>
-                      </div>
-                    </div>
-                    <div class="col-6">
-                        <label for="inputRacdaTrat" class="form-label">Venc. RACDA</label>
-                        <input type="date" :class="`form-control ${rac}`" id="inputRacdaTrat" v-model="racda" required>
-                    </div>
-                    <!-- <div class="alert alert-danger mt-3 py-1 mb-0 text-center" role="alert" v-if="res">{{ res }}</div> -->
-                    <div class="modal-footer">
-                        <button v-if = !cargando type="submit" class="btn btn-primary">Editar</button>
-                        <button v-else class="btn btn-primary" type="button" disabled>
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        Editando...
-                        </button>
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-hidden="true" id="disEdit" hidden></button>
-                    </div>
-                    </form>
-                </div>
-
-                </div>
-            </div>
-        </div>
-
-        <div class="row mt-4 mt-xxl-5">
-            <div class="col-6">
-              <div class="overflow-scroll" style="height: 66vh;">
-                <table class="table caption-top table-bordered">
-                    <caption class="ms-5 ps-5">
-                        Empresas Tratantes
-                        <button class="btn btn-primary float-end me-2" type="button" @click="reset" data-bs-toggle="modal" data-bs-target="#tratanteModal">
-                            Añadir
-                        </button>
-                    </caption>
-                    <thead>
-                        <tr>
-                          <th scope="col">Rif</th>
-                          <th scope="col">Nombre</th>
-                          <th scope="col">Vencimiento del Racda</th>
-                        </tr>
-                    </thead>
-                    <tbody id="empTrat" class="table-group-divider"></tbody>
-                </table>
+  <div class="container-xxl">
+    <div class="modal fade" id="tratanteModal" tabindex="-1" aria-labelledby="tratanteModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="tratanteModalLabel">Empresa Tratante</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="addItem('empTrat', dTrat)" :class="`row g-3 fm ${validate}`" novalidate>
+              <div class="col-12">
+                <label for="inputNameTrat" class="form-label">Nombre</label>
+                <input type="text" :class="`form-control ${nm}`" id="inputNameTrat" v-model="name" required>
               </div>
-            </div>
-            <div class="col-6">
-              <div class="overflow-scroll" style="height: 66vh;">
-                <table class="table caption-top table-bordered">
-                    <caption class="ms-5 ps-5">
-                        Empresas de Transporte
-                        <button class="btn btn-primary float-end me-2" type="button" @click="reset" data-bs-toggle="modal" data-bs-target="#transporteModal">
-                            Añadir
-                        </button>
-                    </caption>
-                    <thead>
-                        <tr>
-                          <th scope="col">Rif</th>
-                          <th scope="col">Nombre</th>
-                          <th scope="col">Vencimiento del Racda</th>
-                        </tr>
-                    </thead>
-                    <tbody id="empTrans" class="table-group-divider"></tbody>
-                </table>
+              <div class="col-6">
+                <label for="inputNameRif" class="form-label">Rif</label>
+                <div class="input-group">
+                  <span class="input-group-text">J-</span>
+                  <input type="number" :class="`form-control ${rv}`" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rif" required>
+                </div>
               </div>
-            </div>
-            <div class="d-flex justify-content-center mt-3 mb-2">
-              <div class="cuadrado-g rounded-circle"></div>
-              <div class="ms-1 pt-1 mt-2">Racda vigente</div>
-              <div class="cuadrado-r ms-5 rounded-circle"></div>
-              <div class="ms-1 pt-1 mt-2">Racda vencido</div>
-            </div>
+              <div class="col-6">
+                <label for="inputRacdaTrat" class="form-label">Venc. RACDA</label>
+                <input type="date" :class="`form-control ${rac}`" id="inputRacdaTrat" v-model="racda" required>
+              </div>
+              <div class="modal-footer">
+                <button v-if = !cargando type="submit" class="btn btn-primary">Registrar</button>
+                <button v-else class="btn btn-primary" type="button" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Registrando...
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="transporteModal" tabindex="-1" aria-labelledby="transporteModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="transporteModalLabel">Empresa de Transporte</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="addItem('empTrans', dTrans)" :class="`row g-3 fm ${validate}`" novalidate>
+              <div class="col-12">
+                <label for="inputNameTrans" class="form-label">Nombre</label>
+                <input type="text" :class="`form-control ${nm}`" id="inputNameTrans" v-model="name" required>
+              </div>
+              <div class="col-6">
+                <label for="inputNameRif" class="form-label">Rif</label>
+                <div class="input-group">
+                  <span class="input-group-text">J-</span>
+                  <input type="number" :class="`form-control ${rv}`" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rif" required>
+                </div>
+              </div>
+              <div class="col-6">
+                <label for="inputRacdaTrans" class="form-label">Venc. RACDA</label>
+                <input type="date" :class="`form-control ${rac}`" id="inputRacdaTrans" v-model="racda" required>
+              </div>
+              <div class="modal-footer">
+                <button v-if = !cargando type="submit" class="btn btn-primary">Registrar</button>
+                <button v-else class="btn btn-primary" type="button" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Registrando...
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="tratEditModal" tabindex="-1" aria-labelledby="tratEditModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="tratEdilModalLabel">{{typeN}}</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="edit" :class="`row g-3 ${validate}`" novalidate>
+              <div class="col-12">
+                <label for="inputNameTrat" class="form-label">Nombre</label>
+                <input type="text" :class="`form-control ${nm}`" id="inputNameTrat" v-model="name" required>
+              </div>
+              <div class="col-6">
+                <label for="inputNameRif" class="form-label">Rif</label>
+                <div class="input-group">
+                  <span class="input-group-text">J-</span>
+                  <input type="number" :class="`form-control ${rv}`" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rif" required>
+                </div>
+              </div>
+              <div class="col-6">
+                <label for="inputRacdaTrat" class="form-label">Venc. RACDA</label>
+                <input type="date" :class="`form-control ${rac}`" id="inputRacdaTrat" v-model="racda" required>
+              </div>
+              <div class="modal-footer">
+                <button v-if = !cargando type="submit" class="btn btn-primary">Editar</button>
+                <button v-else class="btn btn-primary" type="button" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Editando...
+                </button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-hidden="true" id="disEdit" hidden></button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-4 mt-xxl-5">
+      <div class="col-6">
+        <div class="overflow-scroll" style="height: 66vh;">
+          <table class="table caption-top table-bordered">
+            <caption class="ms-5 ps-5">
+              Empresas Tratantes
+              <button class="btn btn-primary float-end me-2" type="button" @click="reset" data-bs-toggle="modal" data-bs-target="#tratanteModal">
+                  Añadir
+              </button>
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Rif</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Vencimiento del Racda</th>
+              </tr>
+            </thead>
+            <tbody id="empTrat" class="table-group-divider"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="overflow-scroll" style="height: 66vh;">
+          <table class="table caption-top table-bordered">
+            <caption class="ms-5 ps-5">
+                Empresas de Transporte
+                <button class="btn btn-primary float-end me-2" type="button" @click="reset" data-bs-toggle="modal" data-bs-target="#transporteModal">
+                    Añadir
+                </button>
+            </caption>
+            <thead>
+                <tr>
+                  <th scope="col">Rif</th>
+                  <th scope="col">Nombre</th>
+                  <th scope="col">Vencimiento del Racda</th>
+                </tr>
+            </thead>
+            <tbody id="empTrans" class="table-group-divider"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="d-flex justify-content-center mt-3 mb-2">
+        <div class="cuadrado-g rounded-circle"></div>
+        <div class="ms-1 pt-1 mt-2">Racda vigente</div>
+        <div class="cuadrado-r ms-5 rounded-circle"></div>
+        <div class="ms-1 pt-1 mt-2">Racda vencido</div>
+      </div>
+    </div>
 
     <div class="modal fade" id="confirmacion" data-bs-backdrop="static" tabindex="-1" aria-labelledby="confimacionLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
@@ -455,14 +446,14 @@ onMounted(() => {
           </div>
           <div class="modal-body">
             <p>Se eliminará la empresa.</p>
-              <div class="modal-footer">
-                <button v-if ="!cargando" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(false)>Cancelar</button>
-                <button v-if ="!cargando" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(true)>Aceptar</button>
-                <button v-else class="btn btn-primary" type="button" disabled>
-                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                  Eliminando...
-                </button>
-              </div>
+            <div class="modal-footer">
+              <button v-if ="!cargando" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(false)>Cancelar</button>
+              <button v-if ="!cargando" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(true)>Aceptar</button>
+              <button v-else class="btn btn-primary" type="button" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Eliminando...
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -478,8 +469,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-
-    </div>
+  </div>
 </template>
 
 <style>
