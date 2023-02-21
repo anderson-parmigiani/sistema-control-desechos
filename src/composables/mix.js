@@ -1,7 +1,7 @@
 import { useUserStore } from '../stores/user';
 import { ref } from 'vue';
 import { db } from '../firebaseConfig';
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc } from 'firebase/firestore';
 
 export const useMix = () => {
   const res = ref();
@@ -33,7 +33,7 @@ export const useMix = () => {
     const userStore = useUserStore();
 
     if(userStore.userData.expDate == null){
-      userStore.wait = 3
+      userStore.wait = 3;
     }
     else {
       switch (new Date(userStore.userData?.expDate) > Date.now()) {
@@ -46,8 +46,8 @@ export const useMix = () => {
         default:
           userStore.wait = 3;
           break;
-      };
-    };
+      }
+    }
   };
 
   const getDateInfo = dateInfo => {
@@ -69,5 +69,5 @@ export const useMix = () => {
     personalRacda,
     racdaAlert,
     getDateInfo
-  };
+  }
 };

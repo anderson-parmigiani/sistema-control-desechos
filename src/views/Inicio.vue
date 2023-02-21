@@ -9,26 +9,25 @@ import  jsPDF  from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const userStore = useUserStore();
-const { getDateInfo } = useMix()
+const { getDateInfo } = useMix();
 
 const selectedMaterial = ref(null);
-const validate = ref('needs-validation');
 const inputData = ref(null);
-const sm = ref('');
 const adding = ref(false);
+const sm = ref('');
 const conf = ref('');
-let dat = [];
+const validate = ref('needs-validation');
 const sumTotal = ref(0);
+let dat = [];
 
 const materialOptions = ['Pantalla', 'Teléfono', 'Computadora', 'Disco Duro (HDD)', 'Disco Sólido (SSD)', 'Ram', 'Tarjeta Madre', 'Procesador (CPU)', 'Tarjeta Gráfica (GPU)', 'Fuente de Poder (PSU)', 'Mouse', 'Teclado', 'Pila', 'Batería'];
 
 const getData = async () => {
-  const getForm = document.querySelector('form')
+  const getForm = document.querySelector('form');
 
   if(selectedMaterial.value !== null && !dat.find((item) => item.desecho === selectedMaterial.value)){
     sm.value = 'valid';
-  }
-  else if (selectedMaterial.value === null || dat.find((item) => item.desecho === selectedMaterial.value)){
+  } else if (selectedMaterial.value === null || dat.find((item) => item.desecho === selectedMaterial.value)){
     sm.value = 'invalid';
   }
 
@@ -44,19 +43,18 @@ const getData = async () => {
       selectedMaterial.value = null;
       adding.value = false;
     }
-  }
-  else{
+  } else {
     validate.value = 'was-validated';
   }
 };
 
 const addItem = async data => {
   try {
-    await addDoc(collection(db, "desecho"), data)
-    await getItems()
+    await addDoc(collection(db, "desecho"), data);
+    await getItems();
   } catch (error) {
     console.log(error.code, error.message);
-  };
+  }
 };
 
 const getItems = async () => {
@@ -76,20 +74,19 @@ const getItems = async () => {
 
     showTotalSum(showSum);
 
-    const delIcon = document.querySelectorAll('.bi-trash')
+    const delIcon = document.querySelectorAll('.bi-trash');
     delIcon.forEach(i => {
-      const id = i.parentElement.parentElement.firstElementChild.innerHTML
-      const desecho = i.parentElement.parentElement.firstElementChild.nextElementSibling.innerHTML
+      const id = i.parentElement.parentElement.firstElementChild.innerHTML;
+      const desecho = i.parentElement.parentElement.firstElementChild.nextElementSibling.innerHTML;
 
       const waitConf = () => {
         if(conf.value === ''){
-          setTimeout(waitConf, 500)
-        }
-        else if(conf.value === true){
+          setTimeout(waitConf, 500);
+        } else if(conf.value === true){
           i.parentElement.parentElement.remove();
           deleteItem(id, desecho, showSum);
         }
-      }
+      };
 
       i.addEventListener("click", waitConf);
     });
@@ -102,7 +99,7 @@ const getItems = async () => {
 const deleteItem = async (id, desecho, showSum) => {
   try {
     await deleteDoc(doc(db, "desecho", id));
-    dat = dat.filter(item => item.desecho !== desecho)
+    dat = dat.filter(item => item.desecho !== desecho);
 
     const q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desecho", "==", desecho));
     const querySnapshot = await getDocs(q);
@@ -111,50 +108,50 @@ const deleteItem = async (id, desecho, showSum) => {
       deleteDoc(doc(db, "item", doct.id));
     });
 
-    sumTotal.value = 0
-    showSum.innerHTML = ''
-    showTotalSum(showSum)
+    sumTotal.value = 0;
+    showSum.innerHTML = '';
+    showTotalSum(showSum);
 
   } catch (error) {
     console.log(error.code, error.message);
-  };
+  }
 };
 
 const confir = bool => {
   conf.value = bool;
   setTimeout(() => {
-    conf.value = ''
+    conf.value = '';
   }, 550);
-}
+};
 
 const showData = (table, data, id) => {
-  table.innerHTML += `
+  table.innerHTML +=`
                       <tr>
                         <td hidden>${id}</td>
                         <td>${data.desecho}</td>
                         <td>${Number.isInteger(data.cp) ? data.cp: parseFloat(data.cp.toFixed(4))} kg <i data-bs-toggle="modal" data-bs-target="#confirmacion" class="bi bi-trash ms-4 me-4 float-end" style="cursor: pointer;"></i> <a href="/app/${data.desecho.toLowerCase().replace(/\s+/g, '')}" class="text-dark"><i class="bi bi-eye float-end" style="cursor: pointer"></i></a></td>
                       </tr>
-                      `
+                    `;
 };
 
 const showTotalSum = element => {
   dat.forEach(i => {
-      sumTotal.value += i.cp
-    });
+    sumTotal.value += i.cp;
+  });
 
-    Number.isInteger(sumTotal.value) ? sumTotal.value: sumTotal.value = parseFloat(sumTotal.value.toFixed(4));
-    element.innerHTML += `
+  Number.isInteger(sumTotal.value) ? sumTotal.value: sumTotal.value = parseFloat(sumTotal.value.toFixed(4));
+  element.innerHTML +=`
                         <div class="bg-light d-flex align-items-center fw-bold mt-5 w-100">
                           <p class="mb-0">Peso Final</p>
                           <p class="d-none d-xxl-block mc mb-0">${sumTotal.value} kg</p>
                           <p class="d-none d-xl-block d-xxl-none mcm mb-0">${sumTotal.value} kg</p>
                           <p class="d-block d-xl-none mcs mb-0">${sumTotal.value} kg</p>
                         </div>
-                        `
+                      `;
 };
 
 const generatePDF = () => {
-  const pdf = jsPDF()
+  const pdf = jsPDF();
 
   pdf.autoTable({ 
     html: '#tab', 
@@ -164,9 +161,9 @@ const generatePDF = () => {
       pdf.setFontSize(8);
       pdf.setTextColor(40);
 
-      pdf.text('Green Tree', 180, 5)
+      pdf.text('Green Tree', 180, 5);
       pdf.setFontSize(13);
-      pdf.text(`${userStore.userData.name}`, data.settings.margin.left, 9)
+      pdf.text(`${userStore.userData.name}`, data.settings.margin.left, 9);
       pdf.setFontSize(11);
       pdf.text('Consolidado de Desechos', data.settings.margin.left, 15);      
       pdf.text(`Fecha: ${getDateInfo(Date.now())}`, data.settings.margin.left, 20);      
@@ -178,10 +175,10 @@ const generatePDF = () => {
       var pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
       pdf.text(str, 195, pageHeight - 10);
     } 
-  })
+  });
 
   pdf.save(`Reporte.pdf`);
-}
+};
 
 onMounted(() => {
   getItems();

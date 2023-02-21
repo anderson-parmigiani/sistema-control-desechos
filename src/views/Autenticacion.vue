@@ -7,17 +7,15 @@ const userStore = useUserStore();
 const { res, timer } = useMix();
 
 const email = ref(localStorage.getItem('email'));
-const local = localStorage.getItem('email');
 const pass = ref();
 const checked = ref();
 const validate = ref('needs-validation');
+const local = localStorage.getItem('email');
 
 const remember = () => {
     if (checked.value == true || checked.value == undefined && local) {
         localStorage.setItem('email', email.value);
-    }
-
-    else if (checked.value == false || checked.value == undefined && !local) {
+    } else if (checked.value == false || checked.value == undefined && !local) {
         localStorage.removeItem('email');
     }
 };

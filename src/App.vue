@@ -1,9 +1,9 @@
 <script setup>
 import { useUserStore } from "./stores/user";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import Footer from './components/Footer.vue';
 import Navbar from './components/Navbar.vue';
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import 'animate.css';
 
 const userStore = useUserStore();

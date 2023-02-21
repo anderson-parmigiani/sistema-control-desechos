@@ -1,32 +1,32 @@
 <script setup>
 import { useUserStore } from '../stores/user';
-import { Tooltip } from "bootstrap";
+import { Tooltip } from 'bootstrap';
 import { watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { storage } from '../firebaseConfig';
-import { ref as fileRef, getDownloadURL } from 'firebase/storage';
+import { ref, getDownloadURL } from 'firebase/storage';
 
 const userStore = useUserStore();
 const route = useRoute();
 
 new Tooltip(document.body, {
-  selector: "[data-bs-toggle='tooltip']",
+  selector: "[data-bs-toggle='tooltip']"
 });
 
 const downloadGuide = async () => {
   try {
-    const guideRef = fileRef(storage, '/documents/Manual de Usuario.pdf');
+    const guideRef = ref(storage, '/documents/Manual de Usuario.pdf');
     const url = await getDownloadURL(guideRef);
-    window.open(url)
+    window.open(url);
   } catch (error) {
     console.log(error.code, error.message);
   }
-}
+};
 
 watch(() => route.params, () => {
   if(userStore.userData){
-    userStore.racdaAlert()
-  };
+    userStore.racdaAlert();
+  }
 });
 </script>
 

@@ -5,8 +5,9 @@ import { useMix } from '../composables/mix';
 
 const userStore = useUserStore();
 const { res, timer } = useMix();
+
 const email = ref();
-const validate = ref('needs-validation')
+const validate = ref('needs-validation');
 
 const changePassword = async () => {
     if(document.querySelector('form').checkValidity()) {
@@ -16,9 +17,8 @@ const changePassword = async () => {
             setTimeout(() => {
                 userStore.logout();
             }, 7000);
-        };
-    };
-    
+        }
+    }
     validate.value = 'was-validated';
 };
 </script>

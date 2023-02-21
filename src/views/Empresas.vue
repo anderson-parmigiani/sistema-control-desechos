@@ -12,52 +12,46 @@ const { getDateInfo } = useMix();
 const name = ref(null);
 const racda = ref(null);
 const rif = ref(null);
-const nm = ref('');
-const rac = ref('');
-const rv = ref('');
-const validate = ref('needs-validation');
-const cargando = ref(false);
 const currType = ref(null);
 const currID = ref(null);
 const typeN = ref(null);
-const res = ref();
+const cargando = ref(false);
+const nm = ref('');
+const rac = ref('');
+const rv = ref('');
 const msgColor = ref('');
 const conf = ref('');
-let dTrat = [];
-let dTrans = [];
+const res = ref();
+const validate = ref('needs-validation');
+let dTrat = [], dTrans = [];
 
 const addItem = async (type, emp) => {
-  const getForm = document.querySelector('.fm')
+  const getForm = document.querySelector('.fm');
   res.value = '';
 
   if(name.value !== null && !emp.find((item) => item.name === name.value)){
     nm.value = 'valid';
 
-  }
-  else if(name.value == null){
+  } else if(name.value == null){
     nm.value = 'invalid';
     showMessage('Ingrese el nombre.', 'text-bg-danger');
-  }
-  else{
+  } else {
     nm.value = 'invalid';
     showMessage('La empresa ya existe.', 'text-bg-danger');
   }
 
   if(rif.value !== null){
     rv.value = 'valid';
-  }
-  else{
+  } else {
     rv.value='invalid';
   }
 
   if (racda.value !== null && new Date(racda.value) > Date.now()){
     rac.value = 'valid';
-  }
-  else if(racda.value !== null && new Date(racda.value) < Date.now()){
+  } else if(racda.value !== null && new Date(racda.value) < Date.now()){
     rac.value = 'invalid';
     showMessage('Racda vencido.', 'text-bg-danger');
-  }
-  else{
+  } else {
     rac.value = 'invalid';
   }
 
@@ -67,7 +61,7 @@ const addItem = async (type, emp) => {
       dTrans.length = 0;
       rac.value = '';
       nm.value = '';
-      rv.value = ''
+      rv.value = '';
       cargando.value = true;
       const inputData = {name: name.value, rif: rif.value, venc: racda.value, uid: userStore.userData.uid};
 
@@ -75,22 +69,20 @@ const addItem = async (type, emp) => {
       try {
         await addDoc(collection(db, `${type}`), inputData);
         showMessage('Empresa registrada exitosamente.', 'text-bg-success');
-        name.value = racda.value = rif.value = null
-        await getItems(type)
+        name.value = racda.value = rif.value = null;
+        await getItems(type);
         cargando.value = false;
       } catch (error) {
         console.log(error.code, error.message);
       }
       cargando.value = false;
-    }
-    else{
+    } else {
       validate.value = 'was-validated';
     }
-  }
-  else{
+  } else {
     validate.value = 'was-validated';
   }
-}
+};
 
 const getItems = async type => {
   const tabCont = document.getElementById(`${type}`);
@@ -101,48 +93,45 @@ const getItems = async type => {
     const querySnapshot = await getDocs(q);
 
     querySnapshot.forEach((doc) => {
-      showData(tabCont, doc.data(), doc.id)
+      showData(tabCont, doc.data(), doc.id);
       if(type == 'empTrat'){
         dTrat.push({... doc.data()});
-      }
-      else if(type = 'empTrans'){
+      } else if(type = 'empTrans'){
         dTrans.push({... doc.data()});
       }
     });    
 
-    const delIcon = document.querySelectorAll('.bi-trash')
+    const delIcon = document.querySelectorAll('.bi-trash');
     delIcon.forEach(i => {
-      const id = i.parentElement.parentElement.firstElementChild.innerHTML
+      const id = i.parentElement.parentElement.firstElementChild.innerHTML;
 
       const waitConf = () => {
         if(conf.value === ''){
-          setTimeout(waitConf, 500)
-        }
-        else if(conf.value === true){
+          setTimeout(waitConf, 500);
+        } else if(conf.value === true){
           i.parentElement.parentElement.remove();
           deleteItem(id, type);
         }
-      }
+      };
 
       i.addEventListener("click", waitConf);
     });
 
-    const editIcon = document.querySelectorAll('.bi-pencil')
+    const editIcon = document.querySelectorAll('.bi-pencil');
     editIcon.forEach(i => {
-      const id = i.parentElement.parentElement.firstElementChild.innerHTML
+      const id = i.parentElement.parentElement.firstElementChild.innerHTML;
 
-      i.addEventListener("click", e => {
-        getItemEdit(id, type)
+      i.addEventListener("click", () => {
+        getItemEdit(id, type);
       });
     });
 
-    const racs = document.querySelectorAll('.calc')
+    const racs = document.querySelectorAll('.calc');
     racs.forEach(i => {
       if(new Date(i.textContent) < Date.now()){
-        i.nextElementSibling.classList.add("bg-danger-subtle")
-      }
-      else {
-        i.nextElementSibling.classList.add("bg-success-subtle")
+        i.nextElementSibling.classList.add("bg-danger-subtle");
+      } else {
+        i.nextElementSibling.classList.add("bg-success-subtle");
       }
     });
 
@@ -152,10 +141,10 @@ const getItems = async type => {
 };
 
 const showMessage = (message, color) => {
-  res.value = message;
-  msgColor.value = color;
   const toastLiveExample = document.getElementById('liveToast');
   const toast = new Toast(toastLiveExample);
+  res.value = message;
+  msgColor.value = color;
   toast.show();
 };
 
@@ -173,10 +162,10 @@ const getItemEdit = async (id, type) => {
 
   try {
     const docRef = doc(db, `${type}`, id);
-    const docSnap = await getDoc(docRef)
+    const docSnap = await getDoc(docRef);
 
     if(docSnap.exists()) {
-      const data = docSnap.data()
+      const data = docSnap.data();
       name.value = data.name;
       rif.value = data.rif;
       racda.value = data.venc;
@@ -184,16 +173,14 @@ const getItemEdit = async (id, type) => {
       currID.value = id;
       if(type == 'empTrans'){
         typeN.value = 'Empresa de Transporte';
-      }
-      else{
+      } else {
         typeN.value = 'Empresa Tratante';
       }
     }
-
   } catch (error) {
     console.log(error.code, error.message);
   }
-}
+};
 
 const edit = async() => {
   const myModal = document.getElementById('disEdit'); 
@@ -201,26 +188,22 @@ const edit = async() => {
 
   if(name.value !== null){
     nm.value = 'valid';
-  }
-  else{
+  } else {
     nm.value ='invalid';
   }
 
   if(rif.value !== null){
     rv.value = 'valid';
-  }
-  else{
+  } else {
     rv.value ='invalid';
   }
 
   if (racda.value !== null && new Date(racda.value) > Date.now()){
     rac.value = 'valid';
-  }
-  else if(racda.value !== null && new Date(racda.value) < Date.now()){
+  } else if(racda.value !== null && new Date(racda.value) < Date.now()){
     rac.value = 'invalid';
     showMessage('Racda vencido.', 'text-bg-danger');
-  }
-  else{
+  } else {
     rac.value = 'invalid';
   }
 
@@ -235,22 +218,21 @@ const edit = async() => {
       name.value = racda.value = rif.value = currType.value = currID.value = null;
       myModal.click();
       cargando.value = false;
-    }
-    else {
+    } else {
       validate.value = 'was-validated';
     }
   } catch (error) {
     console.log(error.code, error.message);
   }
-}
+};
 
 const reset = () => {
   name.value = racda.value = rif.value = currType.value = currID.value = typeN.value = null;
   res.value = '';
-}
+};
 
 const showData = (table, data, id) => {
-  table.innerHTML += `
+  table.innerHTML +=`
                       <tr>
                         <td hidden>${id}</td>
                         <td>J-${data.rif}</td>
@@ -258,15 +240,15 @@ const showData = (table, data, id) => {
                         <td class="calc" hidden>${data.venc}</td>
                         <td>${getDateInfo(data.venc)}<i class="bi bi-trash float-end" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i><i class="bi bi-pencil float-end me-4" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#tratEditModal"></i></td>
                       </tr>
-                      `
+                    `;
 };
 
 const confir = bool => {
   conf.value = bool;
   setTimeout(() => {
-    conf.value = ''
+    conf.value = '';
   }, 550);
-}
+};
 
 onMounted(() => {
   getItems('empTrat');

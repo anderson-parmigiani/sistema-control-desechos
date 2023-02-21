@@ -29,7 +29,7 @@ export const useUserStore = defineStore('userStore', () => {
 
     } finally {
       loadingUser.value = false;
-    };
+    }
   };
 
   const login = async (email, pass) => {
@@ -55,7 +55,7 @@ export const useUserStore = defineStore('userStore', () => {
       setTimeout(() => {
         loadingUser.value = false;        
       }, 4000);
-    };
+    }
   };
   
   const logout = async () => {
@@ -66,7 +66,7 @@ export const useUserStore = defineStore('userStore', () => {
 
     } catch (error) {
       console.log(error.code, error.message);
-    };
+    }
   };
 
   const currentUser = async () => {
@@ -84,7 +84,7 @@ export const useUserStore = defineStore('userStore', () => {
 
       unsubscribe();
     });
-  }
+  };
 
   const changePass = async email => {
     loadingUser.value = true;
@@ -110,7 +110,7 @@ export const useUserStore = defineStore('userStore', () => {
 
     } finally {
       loadingUser.value = false;
-    };
+    }
   };
 
   const updateName = async name => {
@@ -132,7 +132,7 @@ export const useUserStore = defineStore('userStore', () => {
 
     } catch (error) {
       console.log(error.code, error.message);
-    };
+    }
   };
 
   const emailVerified = async () => auth.currentUser.emailVerified;
@@ -153,5 +153,5 @@ export const useUserStore = defineStore('userStore', () => {
     emailVerified,
     personalRacda,
     racdaAlert
-  };
+  }
 });

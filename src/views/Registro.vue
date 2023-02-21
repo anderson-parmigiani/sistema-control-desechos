@@ -3,11 +3,12 @@ import { useUserStore } from '../stores/user';
 import { ref } from 'vue';
 
 const userStore = useUserStore();
+
 const name = ref();
 const email = ref();
 const pass = ref();
-const validate = ref('needs-validation');
 const res = ref();
+const validate = ref('needs-validation');
 
 const submitData = async () => {
     if(document.querySelector('form').checkValidity()) {
@@ -21,8 +22,7 @@ const submitData = async () => {
             res.value = 'Hubo un problema.';
             console.log(error.code, error.message);
         }
-    };
-
+    }
     validate.value = 'was-validated';
 };
 </script>

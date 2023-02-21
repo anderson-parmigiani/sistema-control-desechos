@@ -9,11 +9,11 @@ import { doc, setDoc } from "firebase/firestore";
 const userStore = useUserStore();
 const { res, timer } = useMix();
 
+const image = ref(null);
 const email = ref(userStore.userData.email);
 const name = ref(userStore.userData.name);
-const validate = ref('needs-validation')
-const image = ref(null);
 const expDate = ref(userStore.userData.expDate);
+const validate = ref('needs-validation');
 
 const submitData = async () => {
     if(document.getElementById('main').checkValidity()) {
@@ -29,7 +29,6 @@ const submitData = async () => {
             timer(res, 5000);
         }
     }
-
     validate.value = 'was-validated';
 };
 
@@ -43,25 +42,23 @@ const uploadPhoto = async () => {
         if(image.value !== null && image.value !== undefined){
             const storageRef = fileRef(storage, `images/users/${image.value.name}`);
             const metaData = { contentType: 'image/png'};
-
             await uploadBytes(storageRef, image.value, metaData);
-            await loadPhoto()
-        };
-
+            await loadPhoto();
+        }
     } catch (error) {
         console.log(error.code, error.message);
-    };
+    }
 };
 
 const loadPhoto = async () => {
     try {
         const url = await getDownloadURL(fileRef(storage, `images/users/${image.value.name}`));
-        await associatePhoto(url)
+        await associatePhoto(url);
         await userStore.updatePhoto(url);
 
     } catch (error) {
         console.log(error.code, error.message);
-    };
+    }
 };
 
 const associatePhoto = async url => {
@@ -72,9 +69,9 @@ const associatePhoto = async url => {
             url
         }, { merge: true });
 
-    } catch (e) {
+    } catch (error) {
         console.log(error.code, error.message);
-    };
+    }
 };
 
 const associateRacda = async () => {
@@ -88,9 +85,9 @@ const associateRacda = async () => {
         userStore.userData = {...userStore.userData, expDate: expDate.value};
         userStore.racdaAlert();
 
-    } catch (e) {
+    } catch (error) {
         console.log(error.code, error.message);
-    };
+    }
 };
 </script>
 

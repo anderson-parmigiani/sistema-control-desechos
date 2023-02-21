@@ -5,64 +5,55 @@ import { db } from '../firebaseConfig';
 import { doc, getDoc, getDocs, deleteDoc, query, where, collection, orderBy, addDoc, updateDoc, limit, startAfter, limitToLast, endBefore} from 'firebase/firestore'; 
 import { useUserStore } from '../stores/user';
 import { useMix } from '../composables/mix';
-import VueMultiselect from 'vue-multiselect';
-import  jsPDF  from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { Toast } from 'bootstrap';
-import Chart from 'chart.js/auto'
+import VueMultiselect from 'vue-multiselect';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import Chart from 'chart.js/auto';
 
 const userStore = useUserStore();
-const { getDateInfo } = useMix()
+const { getDateInfo } = useMix();
 
 const selectedCP = ref(null);
 const cp = ref(null);
 const fecha = ref(null);
 const hora = ref(null);
-const empTrans = ref('');
-const racdaTrans = ref(null)
+const racdaTrans = ref(null);
 const racdaTrat = ref(null);
-const com = ref('');
 const currID = ref(null);
+const nombreDesecho = ref(null);
+const intege = ref(null);
+const rifTrans = ref(null);
+const rifTrat = ref(null);
 const adding = ref(false);
-const empTrat = ref('');
 const directoryTrans = ref(false);
 const directoryTrat = ref(false);
-const inputData = ref(null);
+const nextDisabled = ref(false);
+const previousDisabled = ref(false);
+const hideCP = ref(false);
+const spac = ref(true);
+const com = ref('');
+const empTrans = ref('');
+const empTrat = ref('');
 const scp = ref('');
 const su = ref('');
 const sf = ref('');
 const sh = ref('');
-let dat = []
-let daTrans = [];
-let daTrat = [];
-let daTransFilt = [];
-let daTratFilt = [];
-const nombreDesecho = ref(null);
-const sum = ref(0);
-const validate = ref('needs-validation');
-let lastVisible = null;
-let firstVisible = null;
-const nextDisabled = ref(false)
-const previousDisabled = ref(false);
-const nItem = 7;
 const conf = ref('');
-const intege = ref(null);
 const sDate = ref('');
 const eDate = ref('');
-const spac = ref(true);
-const rifTrans = ref(null);
-const rifTrat = ref(null);
-const hideCP = ref(false);
 const res = ref('');
 const msgColor = ref('');
+const sum = ref(0);
+const validate = ref('needs-validation');
 const tipMov = ref('Todos');
-let allFiltData = [];
-
-const route = useRoute();
-
+let dat = [], daTrans = [], daTrat = [], daTransFilt = [], daTratFilt = [], allFiltData = [];
+let lastVisible = null, firstVisible = null;
+const nItem = 7;
 const cpOptions = ['g', 'kg', 'tn'];
 const movOptions = ['Todos', 'Entradas', 'Salidas'];
 
+const route = useRoute();
 
 const getName = async () => {
   try {
@@ -81,17 +72,18 @@ const getName = async () => {
 };
 
 const getItems = async () => {
+  daTrans.length = 0, daTransFilt.length = 0, daTrat.length = 0, daTratFilt.length = 0;
   try {
-    var q = query(collection(db, "empTrans"), where("uid", "==", userStore.userData.uid), orderBy("name"));
-    var querySnapshot = await getDocs(q);
+    let q = query(collection(db, "empTrans"), where("uid", "==", userStore.userData.uid), orderBy("name"));
+    let querySnapshot = await getDocs(q);
 
     querySnapshot.forEach((doc) => {
       daTrans.push({... doc.data()});
     });
 
-    daTrans = daTrans.filter(item => new Date(item.venc) > Date.now())
+    daTrans = daTrans.filter(item => new Date(item.venc) > Date.now());
     daTrans.forEach(i => {
-      daTransFilt.push(i.name)
+      daTransFilt.push(i.name);
     });
 
     q = query(collection(db, "empTrat"), where("uid", "==", userStore.userData.uid), orderBy("name"));
@@ -103,117 +95,115 @@ const getItems = async () => {
 
     daTrat = daTrat.filter(item => new Date(item.venc) > Date.now())
     daTrat.forEach(i => {
-      daTratFilt.push(i.name)
+      daTratFilt.push(i.name);
     });
 
   } catch (error) {
     console.log(error.code, error.message);
   }
-}
+};
 
 const checkData = async () => {
-  const getForm = document.querySelector('form')
+  const getForm = document.querySelector('form');
 
   if(cp.value === null){
     scp.value = 'invalid';
-  }
-  else {
+  } else {
     scp.value = 'valid';
   }
 
   if(selectedCP.value === null){
     su.value = 'invalid';
-  }
-  else {
+  } else {
     su.value = 'valid';
   }
 
   if(fecha.value === null){
     sf.value = 'invalid';
-  }
-  else {
+  } else {
     sf.value = 'valid';
   }
 
   if(hora.value === null){
     sh.value = 'invalid';
-  }
-  else {
+  } else {
     sh.value = 'valid';
   }
 
-  if(getForm.checkValidity()) {
-    if(cp.value !== null && selectedCP.value !== null && fecha.value !== null && hora.value !== null){
-      if(racdaTrans.value !== null && racdaTrat.value !== null){
-        if(new Date(racdaTrans.value) > Date.now() && new Date(racdaTrat.value) > Date.now()){
-          getData();
+  try {
+    if(getForm.checkValidity()) {
+      if(cp.value !== null && selectedCP.value !== null && fecha.value !== null && hora.value !== null){
+        if(racdaTrans.value !== null && racdaTrat.value !== null){
+          if(new Date(racdaTrans.value) > Date.now() && new Date(racdaTrat.value) > Date.now()){
+            await getData();
+          }
+        } else if(racdaTrans.value == null && racdaTrat.value == null){
+          await getData();
+        } else if(racdaTrans.value !== null){
+          if(new Date(racdaTrans.value) > Date.now()){
+            await getData();
+          }
+        } else if(racdaTrat !== null){
+          if(new Date(racdaTrat.value) > Date.now()){
+            await getData();
+          }
         }
+      } else {
+        showMessage('Complete los campos requeridos correctamente.', 'text-bg-danger');
+        validate.value = 'was-validated';
       }
-      else if(racdaTrans.value == null && racdaTrat.value == null){
-        getData();
-      }
-      else if(racdaTrans.value !== null){
-        if(new Date(racdaTrans.value) > Date.now()){
-          getData();
-        }
-      }
-      else if(racdaTrat !== null){
-        if(new Date(racdaTrat.value) > Date.now()){
-          getData();
-        }
-      }
-    }
-    else{
+    } else {
       showMessage('Complete los campos requeridos correctamente.', 'text-bg-danger');
       validate.value = 'was-validated';
     }
+  } catch (error) {
+    console.log(error.code, error.message);
   }
-  else{
-    showMessage('Complete los campos requeridos correctamente.', 'text-bg-danger');
-    validate.value = 'was-validated';
-  }
-}
+};
 
 const getData = async() => {
-  adding.value = true;
   const isInteg = Number.isInteger(cp.value);
+  const inputData = ref(null);
+  adding.value = true;
+
   if(selectedCP.value == 'g') {
     cp.value /= 1000;
-  } 
-  else if(selectedCP.value == 'tn') {
+  } else if(selectedCP.value == 'tn') {
     cp.value *= 1000; 
   }
 
   if(empTrans.value == null){
-    empTrans.value = ''
+    empTrans.value = '';
   }
-
   if(empTrat.value == null){
-    empTrat.value = ''
+    empTrat.value = '';
   }
 
   inputData.value = {desecho: nombreDesecho.value.desecho, desechoID: route.params.name, cp: cp.value, typeCP: Math.sign(cp.value), selectedCP: selectedCP.value, integ: isInteg, fecha: fecha.value, hora: hora.value, empTrans: empTrans.value, empTrat: empTrat.value, com: com.value, uid: userStore.userData.uid};
 
-  await addItem(inputData.value);
-  scp.value = su.value = sf.value = sh.value = '';
-  validate.value = 'needs-validation';
-  cp.value = selectedCP.value = fecha.value = hora.value = racdaTrans.value = racdaTrat.value = rifTrans.value = rifTrat.value = null;
-  empTrans.value = empTrat.value = com.value = '';
+  try {
+    await addItem(inputData.value);
+    scp.value = su.value = sf.value = sh.value = '';
+    validate.value = 'needs-validation';
+    cp.value = selectedCP.value = fecha.value = hora.value = racdaTrans.value = racdaTrat.value = rifTrans.value = rifTrat.value = null;
+    empTrans.value = empTrat.value = com.value = '';
+    await initial();
 
-  await initial()
-}
+  } catch (error) {
+    console.log(error.code, error.message);
+  }
+};
 
 const addItem = async data => {
+  const q = query(collection(db, "empTrans"), where("uid", "==", userStore.userData.uid), where("rif", "==", rifTrans.value));
+  const qs = query(collection(db, "empTrat"), where("uid", "==", userStore.userData.uid), where("rif", "==", rifTrat.value));
+
   try {
     await addDoc(collection(db, "item"), data);
     showMessage('Movimiento registrado exitosamente.', 'text-bg-success');
 
     if(rifTrans.value !== null && rifTrans.value !== undefined && rifTrans !== '' && rifTrat.value !== null && rifTrat.value !== undefined && rifTrat.value !== ''){
-
-      const q = query(collection(db, "empTrans"), where("uid", "==", userStore.userData.uid), where("rif", "==", rifTrans.value));
       const querySnapshot = await getDocs(q);
-
-      const qs = query(collection(db, "empTrat"), where("uid", "==", userStore.userData.uid), where("rif", "==", rifTrat.value));
       const querySnap = await getDocs(qs);
 
       if(querySnapshot.empty == true && querySnap.empty == true){
@@ -222,9 +212,7 @@ const addItem = async data => {
         showMessage('Empresas registradas exitosamente.', 'text-bg-success');
         await getItems();
       }
-    }
-    else if(rifTrans.value !== null && rifTrans.value !== undefined && rifTrans !== ''){
-      const q = query(collection(db, "empTrans"), where("uid", "==", userStore.userData.uid), where("rif", "==", rifTrans.value));
+    } else if(rifTrans.value !== null && rifTrans.value !== undefined && rifTrans !== ''){
       const querySnapshot = await getDocs(q);
 
       if(querySnapshot.empty == true){
@@ -232,9 +220,7 @@ const addItem = async data => {
         await getItems();
         showMessage('Empresa de Transporte registrada exitosamente.', 'text-bg-success');
       }
-    }
-    else if(rifTrat.value !== null && rifTrat.value !== undefined && rifTrat.value !== ''){
-      const qs = query(collection(db, "empTrat"), where("uid", "==", userStore.userData.uid), where("rif", "==", rifTrat.value));
+    } else if(rifTrat.value !== null && rifTrat.value !== undefined && rifTrat.value !== ''){
       const querySnap = await getDocs(qs);
 
       if(querySnap.empty == true){
@@ -245,7 +231,7 @@ const addItem = async data => {
     }
   } catch (error) {
     console.log(error.code, error.message);
-  };
+  }
 };
 
 const showMessage = (message, color) => {
@@ -264,11 +250,11 @@ const initial = async () => {
   nextDisabled.value = true;
 
   try {
-    var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"));
-    var qt = q
+    let q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"));
+    let qt = q;
     spac.value = true;
     tabCont.innerHTML = '';
-    var querySnapshot = await getDocs(q);
+    let querySnapshot = await getDocs(q);
     sum.value = 0;
     if(tipMov.value !== 'Todos'){
       hideCP.value = true;
@@ -276,7 +262,7 @@ const initial = async () => {
     adding.value = false;
 
     querySnapshot.forEach((doc) => {
-      const data = doc.data()
+      const data = doc.data();
       sum.value += data.cp;
     });
 
@@ -340,7 +326,7 @@ const initial = async () => {
 
     tabCont.innerHTML = '';
     querySnapshot = await getDocs(q);
-    var filterSum = await getDocs(qt);
+    let filterSum = await getDocs(qt);
     adding.value = false;
 
     if(querySnapshot.empty == false){
@@ -348,72 +334,70 @@ const initial = async () => {
     }
 
     querySnapshot.forEach(doc => {
-      const data = doc.data()
-        showData(tabCont, data, doc.id);
+      const data = doc.data();
+      showData(tabCont, data, doc.id);
     });
 
-    sum.value = 0
+    sum.value = 0;
     allFiltData.length = 0;
     pdfTabCont.innerHTML = '';
 
     filterSum.forEach(doc => {
-      const data = doc.data()
+      const data = doc.data();
       allFiltData.push({... data});
       showData(pdfTabCont, data, doc.id);
       sum.value += data.cp;
-    })
-      hideCP.value = false;
+    });
 
-    if(querySnapshot.docs.length === 7){
-    }
-    else if(querySnapshot.docs.length === 6){
-      tabCont.innerHTML += `
-                              <br><br>
-                            ` 
+    hideCP.value = false;
+
+    if(querySnapshot.docs.length === 6){
+      tabCont.innerHTML +=`
+                            <br><br>
+                          `; 
     }
     else if(querySnapshot.docs.length === 5){
-      butto.classList.add("mt-4")
-      tabCont.innerHTML += `
-                              <br><br><br>
-                            ` 
+      butto.classList.add("mt-4");
+      tabCont.innerHTML +=`
+                            <br><br><br>
+                          `; 
     }
     else if(querySnapshot.docs.length === 4){
-      tabCont.innerHTML += `
-                              <br><br><br><br><br>
-                            ` 
+      tabCont.innerHTML +=`
+                            <br><br><br><br><br>
+                          `; 
     }
     else if(querySnapshot.docs.length === 3){
-      tabCont.innerHTML += `
-                              <br><br><br><br><br><br><br>
-                            ` 
+      tabCont.innerHTML +=`
+                            <br><br><br><br><br><br><br>
+                          `; 
     }
     else if(querySnapshot.docs.length === 2){
-      butto.classList.add("mt-4")
-      tabCont.innerHTML += `
-                              <br><br><br><br><br><br><br><br>
-                            ` 
+      butto.classList.add("mt-4");
+      tabCont.innerHTML +=`
+                            <br><br><br><br><br><br><br><br>
+                          `;
     }
     else if(querySnapshot.docs.length === 1){
-      tabCont.innerHTML += `
-                              <br><br><br><br><br><br><br><br><br><br>
-                            ` 
+      tabCont.innerHTML +=`
+                            <br><br><br><br><br><br><br><br><br><br>
+                          `; 
     }
 
-    const racs = document.querySelectorAll('.color')
+    const racs = document.querySelectorAll('.color');
       racs.forEach(i => {
         if(parseFloat(i.textContent) < 0){
-          i.classList.add("bg-danger-subtle")
+          i.classList.add("bg-danger-subtle");
         }
         else {
-          i.classList.add("bg-success-subtle")
+          i.classList.add("bg-success-subtle");
         }
-      })
+      });
 
     if(querySnapshot.docs.length < nItem){
       nextDisabled.value = true;
     }
     else if(querySnapshot.docs.length == 7){
-
       lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
       q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
       querySnapshot = await getDocs(q);
@@ -422,13 +406,13 @@ const initial = async () => {
       }
     }
 
-    const delIcon = document.querySelectorAll('.bi-trash')
+    const delIcon = document.querySelectorAll('.bi-trash');
       delIcon.forEach(i => {
         const id = i.parentElement.parentElement.firstElementChild.innerHTML;
 
         const waitConf = () => {
           if(conf.value === ''){
-            setTimeout(waitConf, 500)
+            setTimeout(waitConf, 500);
           }
           else if(conf.value === true){
             i.parentElement.parentElement.remove();
@@ -441,28 +425,29 @@ const initial = async () => {
 
       const editIcon = document.querySelectorAll('.bi-pencil')
       editIcon.forEach(i => {
-        const id = i.parentElement.parentElement.firstElementChild.innerHTML
+        const id = i.parentElement.parentElement.firstElementChild.innerHTML;
 
-        i.addEventListener("click", e => {
-          getItemEdit(id)
+        i.addEventListener("click", () => {
+          getItemEdit(id);
         });
       });
 
       const showIcon = document.querySelectorAll('.bi-eye')
       showIcon.forEach(i => {
-        const id = i.parentElement.parentElement.firstElementChild.innerHTML
+        const id = i.parentElement.parentElement.firstElementChild.innerHTML;
 
-        i.addEventListener("click", e => {
-          getItemEdit(id)
+        i.addEventListener("click", () => {
+          getItemEdit(id);
         });
       });
 
   } catch (error) {
     console.log(error.code, error.message);
   }
-}
+};
 
 const next = async () => {
+  let q;
   const tabCont = document.getElementById('table-content');
   const butto = document.getElementById('but');
   nextDisabled.value = true;
@@ -470,52 +455,44 @@ const next = async () => {
   try {
     if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && (eDate.value == null || eDate.value == undefined || eDate.value == '')){
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
       }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-    }
-    else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+    } else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
       }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }      
-    }
-    else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+    } else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }      
-    }
-    else{
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      }    
+
+    } else{
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));      
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));      
       }
     }
     
     spac.value = true;
     tabCont.innerHTML = '';
-    var querySnapshot = await getDocs(q);
+    let querySnapshot = await getDocs(q);
     adding.value = false;
 
     lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
@@ -525,104 +502,89 @@ const next = async () => {
     }
 
     querySnapshot.forEach((doc) => {
-      const data = doc.data()
+      const data = doc.data();
       showData(tabCont, data, doc.id);
     });
 
     if(querySnapshot.docs.length === 7){
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 7];
-    }
-    else if(querySnapshot.docs.length === 6){
+    } else if(querySnapshot.docs.length === 6){
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 6];
-      tabCont.innerHTML += `
-                              <br><br>
-                            ` 
-    }
-    else if(querySnapshot.docs.length === 5){
+      tabCont.innerHTML +=`
+                            <br><br>
+                          `; 
+    } else if(querySnapshot.docs.length === 5){
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 5];
-      butto.classList.add("mt-4")
-      tabCont.innerHTML += `
-                              <br><br><br>
-                            ` 
-    }
-    else if(querySnapshot.docs.length === 4){
+      butto.classList.add("mt-4");
+      tabCont.innerHTML +=`
+                            <br><br><br>
+                          `; 
+    } else if(querySnapshot.docs.length === 4){
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 4];
-      tabCont.innerHTML += `
-                              <br><br><br><br><br>
-                            ` 
-    }
-    else if(querySnapshot.docs.length === 3){
+      tabCont.innerHTML +=`
+                            <br><br><br><br><br>
+                          `; 
+    } else if(querySnapshot.docs.length === 3){
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 3];
-      tabCont.innerHTML += `
-                              <br><br><br><br><br><br><br>
-                            ` 
-    }
-    else if(querySnapshot.docs.length === 2){
+      tabCont.innerHTML +=`
+                            <br><br><br><br><br><br><br>
+                          `; 
+    } else if(querySnapshot.docs.length === 2){
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 2];
-      butto.classList.add("mt-4")
-      tabCont.innerHTML += `
-                              <br><br><br><br><br><br><br><br>
-                            ` 
-    }
-    else if(querySnapshot.docs.length === 1){
+      butto.classList.add("mt-4");
+      tabCont.innerHTML +=`
+                            <br><br><br><br><br><br><br><br>
+                          `; 
+    } else if(querySnapshot.docs.length === 1){
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
-      tabCont.innerHTML += `
-                              <br><br><br><br><br><br><br><br><br><br>
-                            ` 
+      tabCont.innerHTML +=`
+                            <br><br><br><br><br><br><br><br><br><br>
+                          `; 
     }
 
-    const racs = document.querySelectorAll('.color')
+    const racs = document.querySelectorAll('.color');
       racs.forEach(i => {
         if(parseFloat(i.textContent) < 0){
-          i.classList.add("bg-danger-subtle")
+          i.classList.add("bg-danger-subtle");
+        } else {
+          i.classList.add("bg-success-subtle");
         }
-        else {
-          i.classList.add("bg-success-subtle")
-        }
-      })
+      });
 
     if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && (eDate.value == null || eDate.value == undefined || eDate.value == '')){
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
       }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-    }
-    else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+    } else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
       }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-    }
-    else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+    } else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
       }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-    }
-    else{
+
+    } else {
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));      
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(nItem));      
       }
     }
 
@@ -634,15 +596,14 @@ const next = async () => {
       nextDisabled.value = true;
     }
 
-    const delIcon = document.querySelectorAll('.bi-trash')
+    const delIcon = document.querySelectorAll('.bi-trash');
       delIcon.forEach(i => {
         const id = i.parentElement.parentElement.firstElementChild.innerHTML;
 
         const waitConf = () => {
           if(conf.value === ''){
-            setTimeout(waitConf, 500)
-          }
-          else if(conf.value === true){
+            setTimeout(waitConf, 500);
+          } else if(conf.value === true){
             i.parentElement.parentElement.remove();
             deleteItem(id);
           }
@@ -651,84 +612,77 @@ const next = async () => {
         i.addEventListener("click", waitConf);
       });
 
-      const editIcon = document.querySelectorAll('.bi-pencil')
+      const editIcon = document.querySelectorAll('.bi-pencil');
       editIcon.forEach(i => {
-        const id = i.parentElement.parentElement.firstElementChild.innerHTML
+        const id = i.parentElement.parentElement.firstElementChild.innerHTML;
 
-        i.addEventListener("click", e => {
-          getItemEdit(id)
+        i.addEventListener("click", () => {
+          getItemEdit(id);
         });
       });
 
-      const showIcon = document.querySelectorAll('.bi-eye')
+      const showIcon = document.querySelectorAll('.bi-eye');
       showIcon.forEach(i => {
-        const id = i.parentElement.parentElement.firstElementChild.innerHTML
+        const id = i.parentElement.parentElement.firstElementChild.innerHTML;
 
-        i.addEventListener("click", e => {
-          getItemEdit(id)
+        i.addEventListener("click", () => {
+          getItemEdit(id);
         });
       });
 
   } catch (error) {
     console.log(error.code, error.message);
   }
-}
+};
 
 const prev = async () => {
+  let q;
   const tabCont = document.getElementById('table-content');
   const butto = document.getElementById('but');
-  butto.classList.remove("mt-4")
+  butto.classList.remove("mt-4");
   previousDisabled.value = true;
 
   try {
     if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && (eDate.value == null || eDate.value == undefined || eDate.value == '')){
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
       }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
-      }
-    }
-    else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+    } else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
       }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
-      }
-    }
-    else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+    } else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
       }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
-      }
-    }
-    else{
+
+    } else {
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
-      }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(nItem));
       }
     }
 
     spac.value = true;
     tabCont.innerHTML = '';
-    var querySnapshot = await getDocs(q);
+    let querySnapshot = await getDocs(q);
     adding.value = false;
 
     lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
@@ -739,62 +693,54 @@ const prev = async () => {
     }
 
     querySnapshot.forEach((doc) => {
-      const data = doc.data()
+      const data = doc.data();
       showData(tabCont, data, doc.id);
     });
 
-    const racs = document.querySelectorAll('.color')
+    const racs = document.querySelectorAll('.color');
       racs.forEach(i => {
         if(parseFloat(i.textContent) < 0){
-          i.classList.add("bg-danger-subtle")
+          i.classList.add("bg-danger-subtle");
         }
         else {
-          i.classList.add("bg-success-subtle")
+          i.classList.add("bg-success-subtle");
         }
-      })
+      });
 
     if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && (eDate.value == null || eDate.value == undefined || eDate.value == '')){
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
       }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
-      }
-    }
-    else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+    } else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
       }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
-      }
-    }
-    else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+    } else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
       }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
-      }
-    }
-    else{
+
+    } else {
       if(tipMov.value == 'Entradas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
-      }
-      else if(tipMov.value == 'Salidas'){
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
-      }
-      else {
-        var q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
+      } else if(tipMov.value == 'Salidas'){
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
+      } else {
+        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(nItem));
       }
     }
 
@@ -806,13 +752,13 @@ const prev = async () => {
       previousDisabled.value = true;
     }
 
-    const delIcon = document.querySelectorAll('.bi-trash')
+    const delIcon = document.querySelectorAll('.bi-trash');
       delIcon.forEach(i => {
         const id = i.parentElement.parentElement.firstElementChild.innerHTML;
 
         const waitConf = () => {
         if(conf.value === ''){
-          setTimeout(waitConf, 500)
+          setTimeout(waitConf, 500);
         }
         else if(conf.value === true){
           i.parentElement.parentElement.remove();
@@ -823,21 +769,21 @@ const prev = async () => {
       i.addEventListener("click", waitConf);
       });
 
-      const editIcon = document.querySelectorAll('.bi-pencil')
+      const editIcon = document.querySelectorAll('.bi-pencil');
       editIcon.forEach(i => {
-        const id = i.parentElement.parentElement.firstElementChild.innerHTML
+        const id = i.parentElement.parentElement.firstElementChild.innerHTML;
 
-        i.addEventListener("click", e => {
-          getItemEdit(id)
+        i.addEventListener("click", () => {
+          getItemEdit(id);
         });
       });
 
-      const showIcon = document.querySelectorAll('.bi-eye')
+      const showIcon = document.querySelectorAll('.bi-eye');
       showIcon.forEach(i => {
-        const id = i.parentElement.parentElement.firstElementChild.innerHTML
+        const id = i.parentElement.parentElement.firstElementChild.innerHTML;
 
-        i.addEventListener("click", e => {
-          getItemEdit(id)
+        i.addEventListener("click", () => {
+          getItemEdit(id);
         });
       });
 
@@ -863,7 +809,7 @@ const getItemEdit = async id => {
     const docSnap = await getDoc(docRef);
 
     if(docSnap.exists()) {
-      const data = docSnap.data()
+      const data = docSnap.data();
 
       if(data.selectedCP == 'g'){
         if(data.integ){
@@ -931,15 +877,16 @@ const edit = async() => {
       await initial();
       myModal.click();
       adding.value = false;
-    }
-    else {
+
+    } else {
       showMessage('Complete los campos requeridos correctamente.', 'text-bg-danger');
       validate.value = 'was-validated';
     }
+
   } catch (error) {
     console.log(error.code, error.message);
   }
-}
+};
 
 const sumFunc = async sum => {
   try {
@@ -947,13 +894,13 @@ const sumFunc = async sum => {
     const querySnapshot = await getDocs(q);
 
     querySnapshot.forEach((doc) => {
-      editSum(doc.id, sum)
+      editSum(doc.id, sum);
     });
 
   } catch (error) {
     console.log(error.code, error.message);    
   }
-}
+};
 
 const editSum = async (id, sum) => {
   try {
@@ -963,57 +910,55 @@ const editSum = async (id, sum) => {
   } catch (error) {
     console.log(error.code, error.message); 
   }
-
-}
+};
 
 const showData = (table, data, id) => {
-  const rCP = ref(data.cp)
+  const rCP = ref(data.cp);
   if(data.selectedCP == 'g'){
     if(data.integ){
       rCP.value = Math.round(rCP.value * 1000);
-    }
-    else{
+    } else {
       rCP.value = Math.round(1000 * (rCP.value * 1000)) / 1000;
     }
-  }
-  else if(data.selectedCP == 'tn'){
+
+  } else if(data.selectedCP == 'tn'){
     if(data.integ){
       rCP.value = Math.round(rCP.value / 1000);
-    }
-    else {
+
+    } else {
       rCP.value = Math.round(1000 * (rCP.value / 1000)) / 1000;
     }
   }
 
-table.innerHTML += `
-                      <tr>
-                        <td hidden>${id}</td>
-                        <td class="text-center w-25">${getDateInfo(data.fecha)}</td>
-                        <td class="text-center w-25">${data.hora}</td>
-                        <td class="text-center w-25 color">${rCP.value} ${data.selectedCP}<i class="bi bi-trash float-end me-3" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i><i class="bi bi-pencil float-end me-4" data-bs-toggle="modal" data-bs-target="#editItemModal" style="cursor: pointer;"></i><i class="bi bi-eye float-end me-4" data-bs-toggle="modal" data-bs-target="#infoItemModal" style="cursor: pointer"></i></td>
-                      </tr>
-                    `
+table.innerHTML +=`
+                    <tr>
+                      <td hidden>${id}</td>
+                      <td class="text-center w-25">${getDateInfo(data.fecha)}</td>
+                      <td class="text-center w-25">${data.hora}</td>
+                      <td class="text-center w-25 color">${rCP.value} ${data.selectedCP}<i class="bi bi-trash float-end me-3" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i><i class="bi bi-pencil float-end me-4" data-bs-toggle="modal" data-bs-target="#editItemModal" style="cursor: pointer;"></i><i class="bi bi-eye float-end me-4" data-bs-toggle="modal" data-bs-target="#infoItemModal" style="cursor: pointer"></i></td>
+                    </tr>
+                  `;
 };
 
 const testy = op => {
   if(op === 'Trans'){
     directoryTrans.value = !directoryTrans.value;
-    racdaTrans.value = rifTrans.value = null
-    empTrans.value = ''
-  }
-  else{
+    racdaTrans.value = rifTrans.value = null;
+    empTrans.value = '';
+
+  } else {
     directoryTrat.value = !directoryTrat.value;
-    racdaTrat.value = rifTrat.value = null
-    empTrat.value = ''
+    racdaTrat.value = rifTrat.value = null;
+    empTrat.value = '';
   }
 };
 
 const confir = bool => {
   conf.value = bool;
   setTimeout(() => {
-    conf.value = ''
+    conf.value = '';
   }, 550);
-}
+};
 
 const refresh = () => {
   cp.value = selectedCP.value = intege.value = fecha.value = hora.value = empTrans.value = empTrat.value = currID.value = com.value = null;
@@ -1025,10 +970,10 @@ const refresh = () => {
     directoryTrans.value = false;
     directoryTrat.value = false;
   }, 50);
-}
+};
 
 const generatePDF = () => {
-  const pdf = jsPDF()
+  const pdf = jsPDF();
 
   pdf.autoTable({ 
     html: '#pdftable-content', 
@@ -1038,23 +983,22 @@ const generatePDF = () => {
       pdf.setFontSize(8);
       pdf.setTextColor(40);
 
-      pdf.text('Green Tree', 180, 5)
+      pdf.text('Green Tree', 180, 5);
       pdf.setFontSize(13);
-      pdf.text(`${userStore.userData.name}`, data.settings.margin.left, 9)
+      pdf.text(`${userStore.userData.name}`, data.settings.margin.left, 9);
       pdf.setFontSize(11);
       pdf.text(`Desecho: ${nombreDesecho.value.desecho}`, data.settings.margin.left, 15);
 
       if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && (eDate.value == null || eDate.value == undefined || eDate.value == '')){
         pdf.text(`Desde: ${getDateInfo(sDate.value)}`, data.settings.margin.left, 20);
 
-      }
-      else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+      } else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
         pdf.text(`Hasta: ${getDateInfo(eDate.value)}`, data.settings.margin.left, 20);
-      }
-      else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+      } else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
         pdf.text(`Desde: ${getDateInfo(sDate.value)}, Hasta: ${getDateInfo(eDate.value)}`, data.settings.margin.left, 20);
-      }
-      else {
+
+      } else {
         pdf.text(`Fecha: ${getDateInfo(Date.now())}`, data.settings.margin.left, 20); 
       }
 
@@ -1069,20 +1013,21 @@ const generatePDF = () => {
       var pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
       pdf.text(str, 195, pageHeight - 10);
     } 
-  })
+  });
+
   if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && (eDate.value == null || eDate.value == undefined || eDate.value == '')){
     pdf.save(`Reporte_${nombreDesecho.value.desecho}_d${getDateInfo(sDate.value)}.pdf`);
-  }
-  else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+  } else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
     pdf.save(`Reporte_${nombreDesecho.value.desecho}_h${getDateInfo(eDate.value)}.pdf`);
-  }
-  else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+  } else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
     pdf.save(`Reporte_${nombreDesecho.value.desecho}_${getDateInfo(sDate.value)}_${getDateInfo(eDate.value)}.pdf`);
-  }
-  else{
+
+  } else {
     pdf.save(`Reporte_${nombreDesecho.value.desecho}.pdf`);
   }
-}
+};
 
 const showGraphic = () => {
   const ctx = document.getElementById('graphic');
@@ -1090,28 +1035,15 @@ const showGraphic = () => {
   if (chartStatus != undefined) {
       chartStatus.destroy();
   }
-  let mA = [];
-  let mAG = [];
-  let mAR = [];
-  let uniquemA = [];
-  let uniquemAG = [];
-  let uniquemAR = [];
-  let cpmA = [];
-  let cpmAG = [];
-  let cpmAR = [];
-  let all = [];
-  let green = [];
-  let red = [];
+  let mA = [], mAG = [], mAR = [], uniquemA = [], uniquemAG = [], uniquemAR = [], cpmA = [];
+  let cpmAG = [], cpmAR = [], all = [], green = [], red = [], finalmAG = [], finalmAR = [];
   let data = {};
-  let finalmAG = [];
-  let finalmAR = [];
 
   allFiltData.forEach(i => {
     if((tipMov.value !== 'Todos')){
       mA.push(getMA(i.fecha));
       cpmA.push({cp: i.cp, fecha: getMA(i.fecha)});
-    } 
-    else {
+    } else {
       cpmA.push({cp: i.cp, fecha: getMA(i.fecha), type: i.typeCP});
     }
   });
@@ -1122,14 +1054,12 @@ const showGraphic = () => {
     if(all.length > 12){
       all = all.slice(-12);
     }
-  }
-  else {
+  } else {
     cpmA.forEach(i => {
       if(i.type == 1){
         cpmAG.push(i);
         mAG.push(i.fecha);
-      }
-      else {
+      } else {
         cpmAR.push(i);
         mAR.push(i.fecha);
       }
@@ -1153,15 +1083,14 @@ const showGraphic = () => {
       uniquemA.length = 12;
     }
     uniquemA.reverse();
-  }
-  else {
+  } else {
     uniquemAG = [...new Set(mAG)];
     if(uniquemAG.length > 12){
       uniquemAG.length = 12;
     }
     uniquemAG.reverse();
     for(let i = 0; i < uniquemAG.length; i++){
-      finalmAG.push({x: uniquemAG[i], y: green[i]}) 
+      finalmAG.push({x: uniquemAG[i], y: green[i]}); 
     }
 
     uniquemAR = [...new Set(mAR)];
@@ -1170,7 +1099,7 @@ const showGraphic = () => {
     }
     uniquemAR.reverse();
     for(let i = 0; i < uniquemAR.length; i++){
-      finalmAR.push({x: uniquemAR[i], y: red[i]}) 
+      finalmAR.push({x: uniquemAR[i], y: red[i]}); 
     }
   }
 
@@ -1185,11 +1114,10 @@ const showGraphic = () => {
         borderColor: tipMov.value == 'Entradas' ? 'rgb(25, 135, 84)' : 'rgb(220, 53, 69)',
         backgroundColor: tipMov.value == 'Entradas' ? 'rgb(209, 231, 221)' : 'rgb(248, 215, 218)',
         tension: 0.1
-        },
-      ],
-    };
-  }
-  else{
+        }
+      ]
+    }
+  } else {
     data = {
       datasets: [
         {
@@ -1210,8 +1138,8 @@ const showGraphic = () => {
         xAxisID: 'x2',
         tension: 0.1
         }
-      ],
-    };
+      ]
+    }
   }
 
   new Chart(ctx, {
@@ -1224,7 +1152,7 @@ const showGraphic = () => {
         yAlign: 'bottom',
         callbacks: {
           label(tooltipItems) {
-            return `${tooltipItems.formattedValue} kg`
+            return `${tooltipItems.formattedValue} kg`;
             }
           }
         },
@@ -1271,53 +1199,46 @@ const showGraphic = () => {
         }
       }
     }
-  })
+  });
 };
 
 const getMA = date => {
   let mes = new Date(date).getUTCMonth() + 1;
-    if(mes < 10){
-      mes = '0' + mes;
-    }
+  if(mes < 10){
+    mes = '0' + mes;
+  }
   const format = `${mes}-${new Date(date).getUTCFullYear()}`;
-
   return format;
-}
+};
 
 const critPoints = data => {
-  let next = {};
-  let actual = {};
+  let next = {}, actual = {};
+  let finalCP = [];
   let addCP = 0;
-  let finalCP = []
 
   for(let i = 0; i < data.length; i++){
     actual = data[i];
 
     if(data.length - 1 == i){
-      next = {}
+      next = {};
       if(addCP !== 0) {
         finalCP.push(addCP);
-      }
-      else{
+      } else {
         addCP = actual.cp;
         finalCP.push(addCP);
       }
-    }
-    else {
+    } else {
       next = data[i+1];
 
       if(i == 0 && actual.fecha == next.fecha){
         addCP += actual.cp + next.cp;
-      }
-      else if(i == 0 && actual.fecha !== next.fecha){
+      } else if(i == 0 && actual.fecha !== next.fecha){
         addCP = actual.cp;
         finalCP.push(addCP);
         addCP = next.cp;
-      }
-      else if(actual.fecha == next.fecha){
+      } else if(actual.fecha == next.fecha){
         addCP += next.cp;
-      }
-      else{
+      } else {
         if(addCP !== 0){
           finalCP.push(addCP);
         }
@@ -1326,7 +1247,7 @@ const critPoints = data => {
     }
   }
   return finalCP;
-}
+};
 
 // const newField = async () => {
 //   try {
