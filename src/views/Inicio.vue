@@ -4,6 +4,7 @@ import { db } from '../firebaseConfig';
 import { doc, deleteDoc, getDocs, query, orderBy, where, collection, addDoc } from 'firebase/firestore'; 
 import { useUserStore } from '../stores/user';
 import { useMix } from '../composables/mix';
+import { Toast } from 'bootstrap';
 import VueMultiselect from 'vue-multiselect';
 import  jsPDF  from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -14,13 +15,16 @@ const { getDateInfo } = useMix();
 const selectedMaterial = ref(null);
 const inputData = ref(null);
 const adding = ref(false);
+const byHand = ref(false);
 const sm = ref('');
 const conf = ref('');
+const res = ref('');
+const msgColor = ref('');
 const validate = ref('needs-validation');
 const sumTotal = ref(0);
 let dat = [];
 
-const materialOptions = ['Pantalla', 'Teléfono', 'Computadora', 'Disco Duro (HDD)', 'Disco Sólido (SSD)', 'Ram', 'Tarjeta Madre', 'Procesador (CPU)', 'Tarjeta Gráfica (GPU)', 'Fuente de Poder (PSU)', 'Mouse', 'Teclado', 'Pila', 'Batería'];
+const materialOptions = ['Pantalla', 'Teléfono', 'Computadora', 'HDD', 'SSD', 'Ram', 'Tarjeta Madre', 'Procesador', 'Tarjeta Gráfica', 'Fuente de Poder', 'Mouse', 'Teclado', 'Batería'];
 
 const getData = async () => {
   const getForm = document.querySelector('form');
@@ -29,10 +33,15 @@ const getData = async () => {
     sm.value = 'valid';
   } else if (selectedMaterial.value === null || dat.find((item) => item.desecho === selectedMaterial.value)){
     sm.value = 'invalid';
+    if(selectedMaterial.value === null || selectedMaterial.value === undefined || selectedMaterial.value === ''){
+      showMessage('Ingrese un desecho.', 'text-bg-danger');
+    } else {
+      showMessage('El desecho ya existe.', 'text-bg-danger');
+    }
   }
 
   if(getForm.checkValidity()) {
-    if(selectedMaterial.value !== null && !dat.find((item) => item.desecho === selectedMaterial.value)){
+    if(selectedMaterial.value !== null && selectedMaterial.value !== undefined && selectedMaterial.value !== '' && !dat.find((item) => item.desecho === selectedMaterial.value)){
       dat.length = 0;
       adding.value = true;
       inputData.value = {desecho: selectedMaterial.value, desechoID:selectedMaterial.value.toLowerCase().replace(/\s+/g, ''), cp: 0, uid: userStore.userData.uid};
@@ -48,10 +57,19 @@ const getData = async () => {
   }
 };
 
+const showMessage = (message, color) => {
+  res.value = message;
+  msgColor.value = color;
+  const toastLiveExample = document.getElementById('liveToast');
+  const toast = new Toast(toastLiveExample);
+  toast.show();
+};
+
 const addItem = async data => {
   try {
     await addDoc(collection(db, "desecho"), data);
     await getItems();
+    showMessage('Desecho registrado exitosamente.', 'text-bg-success');
   } catch (error) {
     console.log(error.code, error.message);
   }
@@ -107,6 +125,7 @@ const deleteItem = async (id, desecho, showSum) => {
     querySnapshot.forEach((doct) => {
       deleteDoc(doc(db, "item", doct.id));
     });
+    showMessage('Desecho eliminado exitosamente.', 'text-bg-danger');
 
     sumTotal.value = 0;
     showSum.innerHTML = '';
@@ -142,7 +161,7 @@ const showTotalSum = element => {
   Number.isInteger(sumTotal.value) ? sumTotal.value: sumTotal.value = parseFloat(sumTotal.value.toFixed(4));
   element.innerHTML +=`
                         <div class="bg-light d-flex align-items-center fw-bold mt-5 w-100">
-                          <p class="mb-0">Peso Final</p>
+                          <p class="mb-0">Peso Total</p>
                           <p class="d-none d-xxl-block mc mb-0">${sumTotal.value} kg</p>
                           <p class="d-none d-xl-block d-xxl-none mcm mb-0">${sumTotal.value} kg</p>
                           <p class="d-block d-xl-none mcs mb-0">${sumTotal.value} kg</p>
@@ -167,7 +186,7 @@ const generatePDF = () => {
       pdf.setFontSize(11);
       pdf.text('Consolidado de Desechos', data.settings.margin.left, 15);      
       pdf.text(`Fecha: ${getDateInfo(Date.now())}`, data.settings.margin.left, 20);      
-      pdf.text(`Peso Final: ${Number.isInteger(sumTotal.value) ? sumTotal.value : parseFloat(sumTotal.value.toFixed(4))} kg`, data.settings.margin.left, 25);
+      pdf.text(`Peso Total: ${Number.isInteger(sumTotal.value) ? sumTotal.value : parseFloat(sumTotal.value.toFixed(4))} kg`, data.settings.margin.left, 25);
 
       var str = "" + pdf.getNumberOfPages();
       pdf.setFontSize(10);
@@ -201,7 +220,7 @@ onMounted(() => {
           </div>
           <div class="modal-body">
             <form @submit.prevent="getData" :class="`row g-3 ${validate}`" novalidate>
-              <div :class="`${sm}`">
+              <div v-if="!byHand" :class="`col-10 ${sm}`">
                 <VueMultiselect
                 v-model="selectedMaterial"
                 :options="materialOptions"
@@ -210,6 +229,11 @@ onMounted(() => {
                 placeholder="Desecho"
                 />
               </div>
+              <div v-else class="col-10">
+                <input type="text" :class="`form-control ${sm}`" id="byHandDes" v-model="selectedMaterial" required>
+              </div>
+              <i v-if="!byHand" class="col-2 bi bi-pencil-square" style="font-size: 25px; cursor: pointer" @click="byHand = !byHand"></i>
+              <i v-else class="col-2 bi bi-folder" style="font-size: 25px; cursor: pointer" @click="byHand = !byHand"></i>
               <div class="modal-footer">
                 <button v-if ="!adding" type="submit" class="btn btn-primary">Registrar</button>
                 <button v-else class="btn btn-primary" type="button" disabled>
@@ -261,6 +285,17 @@ onMounted(() => {
         <div class="sum"></div>
       </div>
       <div class="col-3"></div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3">
+      <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div :class="`d-flex ${msgColor}`">
+          <div :class="`toast-body text-center ${msgColor == 'text-bg-danger' ? 'small' : ''}`">
+            {{ res }}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
     </div>
   </div>
 </template>

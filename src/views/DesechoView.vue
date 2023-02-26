@@ -25,6 +25,7 @@ const nombreDesecho = ref(null);
 const intege = ref(null);
 const rifTrans = ref(null);
 const rifTrat = ref(null);
+const eS = ref(null);
 const adding = ref(false);
 const directoryTrans = ref(false);
 const directoryTrat = ref(false);
@@ -47,7 +48,7 @@ const msgColor = ref('');
 const sum = ref(0);
 const validate = ref('needs-validation');
 const tipMov = ref('Todos');
-let dat = [], daTrans = [], daTrat = [], daTransFilt = [], daTratFilt = [], allFiltData = [];
+let dat = [], daTrans = [], daTrat = [], daTransFilt = [], daTratFilt = [], allFiltData = [], it = [];
 let lastVisible = null, firstVisible = null;
 const nItem = 7;
 const cpOptions = ['g', 'kg', 'tn'];
@@ -132,21 +133,27 @@ const checkData = async () => {
 
   try {
     if(getForm.checkValidity()) {
-      if(cp.value !== null && selectedCP.value !== null && fecha.value !== null && hora.value !== null){
-        if(racdaTrans.value !== null && racdaTrat.value !== null){
-          if(new Date(racdaTrans.value) > Date.now() && new Date(racdaTrat.value) > Date.now()){
+
+      if(cp.value !== null && selectedCP.value !== null && fecha.value !== null && hora.value !== null && (eS.value === 'Entrada' || eS.value === 'Salida')){
+        const foundRep = it.find(i => i.fecha == fecha.value && i.hora == hora.value)
+        if(!foundRep) {
+          if(racdaTrans.value !== null && racdaTrat.value !== null){
+            if(new Date(racdaTrans.value) > Date.now() && new Date(racdaTrat.value) > Date.now()){
+              await getData();
+            }
+          } else if(racdaTrans.value == null && racdaTrat.value == null){
             await getData();
+          } else if(racdaTrans.value !== null){
+            if(new Date(racdaTrans.value) > Date.now()){
+              await getData();
+            }
+          } else if(racdaTrat !== null){
+            if(new Date(racdaTrat.value) > Date.now()){
+              await getData();
+            }
           }
-        } else if(racdaTrans.value == null && racdaTrat.value == null){
-          await getData();
-        } else if(racdaTrans.value !== null){
-          if(new Date(racdaTrans.value) > Date.now()){
-            await getData();
-          }
-        } else if(racdaTrat !== null){
-          if(new Date(racdaTrat.value) > Date.now()){
-            await getData();
-          }
+        } else {
+          showMessage('Ya existe un movimiento con la misma fecha y hora.', 'text-bg-danger');
         }
       } else {
         showMessage('Complete los campos requeridos correctamente.', 'text-bg-danger');
@@ -171,6 +178,10 @@ const getData = async() => {
   } else if(selectedCP.value == 'tn') {
     cp.value *= 1000; 
   }
+  
+  if(eS.value === 'Salida'){
+    cp.value *= -1
+  }
 
   if(empTrans.value == null){
     empTrans.value = '';
@@ -185,7 +196,7 @@ const getData = async() => {
     await addItem(inputData.value);
     scp.value = su.value = sf.value = sh.value = '';
     validate.value = 'needs-validation';
-    cp.value = selectedCP.value = fecha.value = hora.value = racdaTrans.value = racdaTrat.value = rifTrans.value = rifTrat.value = null;
+    cp.value = selectedCP.value = fecha.value = hora.value = racdaTrans.value = racdaTrat.value = rifTrans.value = rifTrat.value = eS.value = null;
     empTrans.value = empTrat.value = com.value = '';
     await initial();
 
@@ -246,6 +257,7 @@ const initial = async () => {
   const tabCont = document.getElementById('table-content');
   const pdfTabCont = document.getElementById('content');
   const butto = document.getElementById('but');
+  it.length = 0;
   previousDisabled.value = true;
   nextDisabled.value = true;
 
@@ -263,8 +275,11 @@ const initial = async () => {
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
+      it.push(data);
       sum.value += data.cp;
     });
+    
+    console.log(it);
 
     sumFunc(sum.value);
 
@@ -272,54 +287,46 @@ const initial = async () => {
       if(tipMov.value == 'Entradas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(nItem));
         qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"));
-      }
-      else if(tipMov.value == 'Salidas'){
+      } else if(tipMov.value == 'Salidas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(nItem));
         qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"));
-      }
-      else {
+      } else {
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(nItem));
         qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"));
       }
-    }
-    else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+    } else if((sDate.value == null || sDate.value == undefined || sDate.value == '') && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
       if(tipMov.value == 'Entradas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(nItem));
         qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"));
-      }
-      else if(tipMov.value == 'Salidas'){
+      } else if(tipMov.value == 'Salidas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(nItem));
         qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"));
-      }
-      else {
+      } else {
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(nItem));
         qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"));
       }
-    }
-    else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
+
+    } else if(sDate.value !== null && sDate.value !== undefined && sDate.value !== '' && eDate.value !== null && eDate.value !== undefined && eDate.value !== ''){
       if(tipMov.value == 'Entradas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(nItem));
         qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"));
-      }
-      else if(tipMov.value == 'Salidas'){
+      } else if(tipMov.value == 'Salidas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(nItem));
         qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"));
-      }
-      else {
+      } else {
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(nItem));
         qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"));
       }
-    }
-    else{
+
+    } else {
       if(tipMov.value == 'Entradas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(nItem));   
         qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"));      
-      }
-      else if(tipMov.value == 'Salidas'){
+      } else if(tipMov.value == 'Salidas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(nItem));    
         qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"));          
-      }
-      else {
+      } else {
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(nItem));
       }
     }
@@ -355,30 +362,25 @@ const initial = async () => {
       tabCont.innerHTML +=`
                             <br><br>
                           `; 
-    }
-    else if(querySnapshot.docs.length === 5){
+    } else if(querySnapshot.docs.length === 5){
       butto.classList.add("mt-4");
       tabCont.innerHTML +=`
                             <br><br><br>
                           `; 
-    }
-    else if(querySnapshot.docs.length === 4){
+    } else if(querySnapshot.docs.length === 4){
       tabCont.innerHTML +=`
                             <br><br><br><br><br>
                           `; 
-    }
-    else if(querySnapshot.docs.length === 3){
+    } else if(querySnapshot.docs.length === 3){
       tabCont.innerHTML +=`
                             <br><br><br><br><br><br><br>
                           `; 
-    }
-    else if(querySnapshot.docs.length === 2){
+    } else if(querySnapshot.docs.length === 2){
       butto.classList.add("mt-4");
       tabCont.innerHTML +=`
                             <br><br><br><br><br><br><br><br>
                           `;
-    }
-    else if(querySnapshot.docs.length === 1){
+    } else if(querySnapshot.docs.length === 1){
       tabCont.innerHTML +=`
                             <br><br><br><br><br><br><br><br><br><br>
                           `; 
@@ -388,8 +390,7 @@ const initial = async () => {
       racs.forEach(i => {
         if(parseFloat(i.textContent) < 0){
           i.classList.add("bg-danger-subtle");
-        }
-        else {
+        } else {
           i.classList.add("bg-success-subtle");
         }
       });
@@ -413,8 +414,7 @@ const initial = async () => {
         const waitConf = () => {
           if(conf.value === ''){
             setTimeout(waitConf, 500);
-          }
-          else if(conf.value === true){
+          } else if(conf.value === true){
             i.parentElement.parentElement.remove();
             deleteItem(id);
           }
@@ -701,8 +701,7 @@ const prev = async () => {
       racs.forEach(i => {
         if(parseFloat(i.textContent) < 0){
           i.classList.add("bg-danger-subtle");
-        }
-        else {
+        } else {
           i.classList.add("bg-success-subtle");
         }
       });
@@ -759,8 +758,7 @@ const prev = async () => {
         const waitConf = () => {
         if(conf.value === ''){
           setTimeout(waitConf, 500);
-        }
-        else if(conf.value === true){
+        } else if(conf.value === true){
           i.parentElement.parentElement.remove();
           deleteItem(id, desecho);
         }
@@ -814,21 +812,25 @@ const getItemEdit = async id => {
       if(data.selectedCP == 'g'){
         if(data.integ){
           cp.value = Math.round(data.cp * 1000);
-        }
-        else{
+        } else{
           cp.value = Math.round(1000 * (data.cp * 1000)) / 1000;
         }
       }
       else if(data.selectedCP == 'tn'){
         if(data.integ){
           cp.value = Math.round(data.cp / 1000);
-        }
-        else {
+        } else {
           cp.value = Math.round(1000 * (data.cp / 1000)) / 1000;
         }
-      }
-      else{
+      } else {
         cp.value = data.cp;
+      }
+
+      if(data.typeCP === -1){
+        cp.value *= -1;
+        eS.value = 'Salida';
+      } else {
+        eS.value = 'Entrada';
       }
 
       selectedCP.value = data.selectedCP;
@@ -850,29 +852,31 @@ const edit = async() => {
   const myModal = document.getElementById('disEdit'); 
 
   try {
-    if(cp.value !== null && cp.value !== '' && cp.value !== undefined && selectedCP.value !== null && selectedCP.value !== '' && selectedCP.value !== undefined && fecha.value !== null && fecha.value !== '' && fecha.value !== undefined && hora.value !== null && hora.value !== '' && hora.value !== undefined){
+    if(cp.value !== null && cp.value !== '' && cp.value !== undefined && selectedCP.value !== null && selectedCP.value !== '' && selectedCP.value !== undefined && fecha.value !== null && fecha.value !== '' && fecha.value !== undefined && hora.value !== null && hora.value !== '' && hora.value !== undefined && (eS.value === 'Entrada' || eS.value === 'Salida')){
       if(selectedCP.value == 'g'){
         if(intege.value){
           cp.value = cp.value / 1000;
-        }
-        else{
+        } else {
           cp.value = (1000 * (cp.value / 1000) / 1000);
         }
-      }
-      else if(selectedCP.value == 'tn'){
+
+      } else if(selectedCP.value == 'tn'){
         if(intege.value){
           cp.value = cp.value * 1000;
-        }
-        else {
+        } else {
           cp.value = (1000 * (cp.value * 1000) / 1000);
         }
+      }
+
+      if(eS.value === 'Salida'){
+        cp.value *= -1;
       }
 
       adding.value = true;
       const docRef = doc(db, "item", currID.value);
       await updateDoc(docRef, {cp: cp.value, typeCP: Math.sign(cp.value), selectedCP: selectedCP.value, fecha: fecha.value, hora: hora.value, empTrans: empTrans.value, empTrat: empTrat.value, com: com.value});
       showMessage('Movimiento editado exitosamente.', 'text-bg-success');
-      cp.value = selectedCP.value = fecha.value = hora.value = empTrans.value = empTrat.value = currID.value = com.value = null;
+      cp.value = selectedCP.value = fecha.value = hora.value = empTrans.value = empTrat.value = currID.value = com.value = eS.value = null;
       validate.value = 'needs-validation';
       await initial();
       myModal.click();
@@ -961,7 +965,7 @@ const confir = bool => {
 };
 
 const refresh = () => {
-  cp.value = selectedCP.value = intege.value = fecha.value = hora.value = empTrans.value = empTrat.value = currID.value = com.value = null;
+  cp.value = selectedCP.value = intege.value = fecha.value = hora.value = empTrans.value = empTrat.value = currID.value = com.value = eS.value = null;
   setTimeout(() => {
     directoryTrans.value = true;
     directoryTrat.value = true;
@@ -1003,7 +1007,7 @@ const generatePDF = () => {
       }
 
       pdf.text(`Movimientos: ${tipMov.value}`, data.settings.margin.left, 25);
-      pdf.text(`Peso Final: ${Number.isInteger(sum.value) ? sum.value : parseFloat(sum.value.toFixed(4))} kg`, data.settings.margin.left, 30);
+      pdf.text(`Peso Total: ${Number.isInteger(sum.value) ? sum.value : parseFloat(sum.value.toFixed(4))} kg`, data.settings.margin.left, 30);
 
       var str = "" + pdf.getNumberOfPages();
 
@@ -1293,9 +1297,9 @@ onMounted(() => {
     </div>
 
     <p class="text-center mt-4 mb-1 lead d-none d-xxl-block">{{nombreDesecho?.desecho}}</p>
-    <p class="text-center lead mb-4 d-none d-xxl-block">Peso Final: <span v-if="!hideCP">{{Number.isInteger(sum) ? sum : parseFloat(sum.toFixed(4))}} kg</span><span v-else>0 kg</span></p>
+    <p class="text-center lead mb-4 d-none d-xxl-block">Peso Total: <span v-if="!hideCP">{{Number.isInteger(sum) ? sum : parseFloat(sum.toFixed(4))}} kg</span><span v-else>0 kg</span></p>
     <p class="ss mt-1 lead d-xxl-none">{{nombreDesecho?.desecho}}</p>
-    <p class="sc lead mb-4 pb-3 d-xxl-none">Peso Final: <span v-if="!hideCP">{{Number.isInteger(sum) ? sum : parseFloat(sum.toFixed(4))}} kg</span><span v-else>0 kg</span></p>
+    <p class="sc lead mb-4 pb-3 d-xxl-none">Peso Total: <span v-if="!hideCP">{{Number.isInteger(sum) ? sum : parseFloat(sum.toFixed(4))}} kg</span><span v-else>0 kg</span></p>
     <div class="d-inline-flex d-xxl-none ps-5 ms-5">
       <div class="cuadrado-g ts rounded-circle"></div>
       <div class="ms-1 pt-3 mt-3">Entrada</div>
@@ -1344,10 +1348,10 @@ onMounted(() => {
               </div>
               <div class="col-3 mt-3">
                 <label for="CP" class="form-label">Peso*</label>
-                <input type="number" step="0.001" :class="`form-control ${scp}`" id="CP" v-model="cp" required>
+                <input type="number" min="0.001" step="0.001" :class="`form-control ${scp}`" id="CP" oninput="validity.valid||(value='');" v-model="cp" required>
               </div>
-              <div :class="`col-3 mt-3 ${su}`">
-                <label class="form-label">Unidades*</label>
+              <div :class="`col-1 mt-3 ${su}`">
+                <label class="form-label">Unidad*</label>
                 <VueMultiselect
                 v-model="selectedCP"
                 :options="cpOptions"
@@ -1355,6 +1359,21 @@ onMounted(() => {
                 :show-labels="false"
                 placeholder="..."
                 />
+              </div>
+              <div class="col-2 mt-3 ps-4">
+                <label class="form-check-label">Tipo*</label>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="radio" name="entsal" id="entrada" value="Entrada" v-model="eS">
+                  <label class="form-check-label" for="entrada">
+                    Entrada
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="entsal" id="salida" value="Salida" v-model="eS">
+                  <label class="form-check-label" for="salida">
+                    Salida
+                  </label>
+                </div>
               </div>
               <div v-if="!directoryTrans" class="col-5">
                 <label for="trans" class="form-label">Empresa de Transporte</label>
@@ -1418,7 +1437,6 @@ onMounted(() => {
                 <textarea class="form-control" id="exampleFormControlTextarea1" maxlength="100" rows="2" v-model="com"></textarea>
               </div>
               <div class="modal-footer">
-                <p class="me-auto mb-auto">Para salidas escribir el símbolo (-) en el campo peso.</p>
                 <span class="me-auto mb-auto">(*) = campo requerido.</span>
                 <button v-if ="!adding" type="submit" class="btn btn-primary">Registrar</button>
                 <button v-else class="btn btn-primary" type="button" disabled>
@@ -1451,10 +1469,10 @@ onMounted(() => {
               </div>
               <div class="col-3 mt-3">
                 <label for="CP" class="form-label">Peso*</label>
-                <input type="number" step="0.001" :class="`form-control ${scp}`" id="CP" v-model="cp" required>
+                <input type="number" min="0.001" step="0.001" :class="`form-control ${scp}`" id="CP" oninput="validity.valid||(value='');" v-model="cp" required>
               </div>
-              <div :class="`col-3 mt-3 ${su}`">
-                <label class="form-label">Unidades*</label>
+              <div :class="`col-1 mt-3 ${su}`">
+                <label class="form-label">Unidad*</label>
                 <VueMultiselect
                 v-model="selectedCP"
                 :options="cpOptions"
@@ -1462,6 +1480,21 @@ onMounted(() => {
                 :show-labels="false"
                 placeholder="..."
                 />
+              </div>
+              <div class="col-2 mt-3 ps-4">
+                <label class="form-check-label">Tipo*</label>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="radio" name="entsal" id="entrada" value="Entrada" v-model="eS">
+                  <label class="form-check-label" for="entrada">
+                    Entrada
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="entsal" id="salida" value="Salida" v-model="eS">
+                  <label class="form-check-label" for="salida">
+                    Salida
+                  </label>
+                </div>
               </div>
               <div class="col-6">
                 <label for="trans" class="form-label">Empresa de Transporte</label>
@@ -1486,7 +1519,6 @@ onMounted(() => {
                 <textarea class="form-control" id="exampleFormControlTextarea1" maxlength="100" rows="2" v-model="com"></textarea>
               </div>
               <div class="modal-footer">
-                <p class="me-auto mb-auto">Para salidas escribir el símbolo (-) en el campo peso.</p>
                 <span class="me-auto mb-auto">(*) = campo requerido.</span>
                 <button v-if ="!adding" type="submit" class="btn btn-primary">Editar</button>
                 <button v-else class="btn btn-primary" type="button" disabled>
@@ -1510,21 +1542,35 @@ onMounted(() => {
           </div>
           <div class="modal-body">
             <form @submit.prevent="" :class="`row g-3 ${validate}`" novalidate>
-              <div class="col-7 mt-3">
+              <div class="col-6 mt-3">
                 <label for="CP" class="form-label">Peso</label>
                 <input type="number" step="0.001" :class="`form-control ${scp}`" id="CP" v-model="cp" readonly required>
               </div>
-              <div class="col-1"></div>
-              <div :class="`col-4 mt-3 ${su}`">
-                <label for="unidades" class="form-label">Unidades</label>
+              <div :class="`col-2 mt-3 ${su}`">
+                <label for="unidades" class="form-label">Unidad</label>
                 <input type="text" class="form-control" id="unidades" v-model="selectedCP" readonly required>
               </div>
-              <div class="col-7 mt-3">
+              <div class="col-3 mt-3 ps-5">
+                <label class="form-check-label">Tipo</label>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="radio" name="entsal" id="entrada" value="Entrada" v-model="eS" disabled>
+                  <label class="form-check-label" for="entrada">
+                    Entrada
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="entsal" id="salida" value="Salida" v-model="eS" disabled>
+                  <label class="form-check-label" for="salida">
+                    Salida
+                  </label>
+                </div>
+              </div>
+              <div class="col-8 mt-3">
                 <label for="fecha" class="form-label">Fecha</label>
                 <input type="date" :class="`form-control ${sf}`" id="fecha" v-model="fecha" readonly required>
               </div>
               <div class="col-1"></div>
-              <div class="col-4 mt-3">
+              <div class="col-3 mt-3">
                 <label for="hora" class="form-label">Hora</label>
                 <input type="time" :class="`form-control ${sh}`" id="hora" v-model="hora" readonly required>
               </div>
@@ -1645,7 +1691,7 @@ onMounted(() => {
 }
 
 .multiselect__placeholder{
-  margin-left: 10px;
+  margin-left: 1px;
   margin-top: 2px;
 }
 
@@ -1674,6 +1720,7 @@ onMounted(() => {
 .multiselect__select:before {
     color: black !important;
     border-top-color: black !important;
+    right: -35% !important;
 }
 
 .invalid .multiselect__tags {
