@@ -23,8 +23,8 @@ auth.languageCode = 'es';
 const sessionPersistence = async () => {
   try {
     await setPersistence(auth, browserSessionPersistence);
-  } catch (error) {
-    console.log(error.code, error.message);
+  } catch (e) {
+    console.log(e.message);
   }
 };
 

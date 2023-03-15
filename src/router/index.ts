@@ -2,56 +2,52 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useUserStore } from '../stores/user';
 
 const requireAuthInicio = async (to, from, next) => {
-  const userStore = useUserStore();
-  userStore.loading = true;
-
-  if(from.path == '/' || from.path == '/usuario' || from.path == '/recuperacion' || from.path == '/empresas' || from.name == 'desecho'){
-    userStore.loading = false;
-  }
-
-  const user = await userStore.currentUser();
-
-  if (user && user.emailVerified) {
-    if(to.name == 'NotFound'){
-      next('/');
-    }
-    else{
-      await userStore.personalRacda();
-      next();
-    }
-  }
-
-  else {
+  try {
+    const userStore = useUserStore();
+  
+    // if(from.path == '/' || from.path == '/usuario' || from.path == '/recuperacion' || from.path == '/empresas' || from.name == 'desecho')
+    //   userStore.loading = false;
+  
+    const user = await userStore.currentUser();
+  
+    if (user && userStore.auth.currentUser.emailVerified){
+      if(to.name == 'NotFound'){
+        next('/');
+      } else {
+        await userStore.personalRacda();
+        next();
+      }
+    } else {
       next("/autenticacion");
+    }
+  } catch (e) {
+    console.log(e.message);
   }
-
-  userStore.loading = false;
 };
 
 const authLogin = async (to, from, next) => {
-  const userStore = useUserStore();
-  const user = await userStore.currentUser();
-  if (!user) {
-    next();
-  }
-
-  else if (user && !user.emailVerified) {
-    next();
-  }
-
-  else if (user && user.emailVerified) {
-    next("/");
+  try {
+    const userStore = useUserStore();
+    const user = await userStore.currentUser();
+  
+    if (!user) next();
+    else if (user && !userStore.auth.currentUser.emailVerified) next();
+    else if (user && userStore.auth.currentUser.emailVerified) next("/");
+  } catch (e) {
+    console.log(e.message);
   }
 };
 
 const waitUser = async (to, from, next) => {
-  const userStore = useUserStore();
-  const user = await userStore.currentUser();
-
-  if (user && user.emailVerified) {
-    await userStore.personalRacda();
-  }
+  try {
+    const userStore = useUserStore();
+    const user = await userStore.currentUser();
+  
+    if (user && userStore.auth.currentUser.emailVerified) await userStore.personalRacda();
     next();
+  } catch (e) {
+    console.log(e.message);
+  }
 };
 
 const router = createRouter({

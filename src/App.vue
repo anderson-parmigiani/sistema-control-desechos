@@ -1,4 +1,6 @@
 <script setup>
+import { watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useUserStore } from "./stores/user";
 import Footer from './components/Footer.vue';
 import Navbar from './components/Navbar.vue';
@@ -7,6 +9,11 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import 'animate.css';
 
 const userStore = useUserStore();
+const route = useRoute();
+
+watch(() => route.name, () => {
+  if(userStore.userData) userStore.racdaAlert();
+});
 </script>
 
 <template>

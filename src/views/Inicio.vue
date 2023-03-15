@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { db } from '../firebaseConfig';
 import { doc, deleteDoc, getDocs, query, orderBy, where, collection, addDoc } from 'firebase/firestore'; 
@@ -16,8 +16,8 @@ const selectedMaterial = ref(null);
 const inputData = ref(null);
 const adding = ref(false);
 const byHand = ref(false);
+const conf = ref<string | boolean>('');
 const sm = ref('');
-const conf = ref('');
 const res = ref('');
 const msgColor = ref('');
 const validate = ref('needs-validation');
@@ -27,42 +27,27 @@ let dat = [];
 const materialOptions = ['Pantalla', 'Teléfono', 'Computadora', 'HDD', 'SSD', 'Ram', 'Tarjeta Madre', 'Procesador', 'Tarjeta Gráfica', 'Fuente de Poder', 'Mouse', 'Teclado', 'Batería'];
 
 const getData = async () => {
-  const getForm = document.querySelector('form');
+  try {
+    if(!selectedMaterial.value) throw new Error('Ingrese un desecho.');
+    if(dat.find(item => item.desecho === selectedMaterial.value)) throw new Error('El desecho ya existe.');
 
-  if(selectedMaterial.value !== null && !dat.find((item) => item.desecho === selectedMaterial.value)){
+    inputData.value = {desecho: selectedMaterial.value, desechoID:selectedMaterial.value.toLowerCase().replace(/\s+/g, ''), cp: 0, uid: userStore.userData.uid};
     sm.value = 'valid';
-  } else if (selectedMaterial.value === null || dat.find((item) => item.desecho === selectedMaterial.value)){
+    dat.length = 0;
+    adding.value = true;
+
+    await addItem(inputData.value);
+
+    selectedMaterial.value = null;
+    adding.value = false;
+    sm.value = '';
+    validate.value = 'needs-validation';
+  } catch (e) {
     sm.value = 'invalid';
-    if(selectedMaterial.value === null || selectedMaterial.value === undefined || selectedMaterial.value === ''){
-      showMessage('Ingrese un desecho.', 'text-bg-danger');
-    } else {
-      showMessage('El desecho ya existe.', 'text-bg-danger');
-    }
-  }
-
-  if(getForm.checkValidity()) {
-    if(selectedMaterial.value !== null && selectedMaterial.value !== undefined && selectedMaterial.value !== '' && !dat.find((item) => item.desecho === selectedMaterial.value)){
-      dat.length = 0;
-      adding.value = true;
-      inputData.value = {desecho: selectedMaterial.value, desechoID:selectedMaterial.value.toLowerCase().replace(/\s+/g, ''), cp: 0, uid: userStore.userData.uid};
-      sm.value = '';
-      validate.value = 'needs-validation';
-
-      await addItem(inputData.value);
-      selectedMaterial.value = null;
-      adding.value = false;
-    }
-  } else {
+    console.log(e.message);
+  } finally {
     validate.value = 'was-validated';
   }
-};
-
-const showMessage = (message, color) => {
-  res.value = message;
-  msgColor.value = color;
-  const toastLiveExample = document.getElementById('liveToast');
-  const toast = new Toast(toastLiveExample);
-  toast.show();
 };
 
 const addItem = async data => {
@@ -70,26 +55,25 @@ const addItem = async data => {
     await addDoc(collection(db, "desecho"), data);
     await getItems();
     showMessage('Desecho registrado exitosamente.', 'text-bg-success');
-  } catch (error) {
-    console.log(error.code, error.message);
+  } catch (e) {
+    console.log(e.message);
   }
 };
 
 const getItems = async () => {
-  const tabCont = document.getElementById('table-content');
-  const showSum = document.querySelector('.sum');
-
   try {
     const q = query(collection(db, "desecho"), where("uid", "==", userStore.userData.uid), orderBy("desecho"));
+    const tabCont = document.getElementById('table-content');
+    const showSum = document.querySelector('.sum');
     tabCont.innerHTML = '';
     showSum.innerHTML = '';
+
     const querySnapshot = await getDocs(q);
 
-    querySnapshot.forEach((doc) => {
+    querySnapshot.forEach(doc => {
       showData(tabCont, doc.data(), doc.id);
       dat.push({... doc.data()});
     });
-
     showTotalSum(showSum);
 
     const delIcon = document.querySelectorAll('.bi-trash');
@@ -97,20 +81,18 @@ const getItems = async () => {
       const id = i.parentElement.parentElement.firstElementChild.innerHTML;
       const desecho = i.parentElement.parentElement.firstElementChild.nextElementSibling.innerHTML;
 
-      const waitConf = () => {
+      const waitConf = async () => {
         if(conf.value === ''){
           setTimeout(waitConf, 500);
         } else if(conf.value === true){
           i.parentElement.parentElement.remove();
-          deleteItem(id, desecho, showSum);
+          await deleteItem(id, desecho, showSum);
         }
       };
-
       i.addEventListener("click", waitConf);
     });
-
-  } catch (error) {
-    console.log(error.code, error.message);
+  } catch (e) {
+    console.log(e.message);
   }
 };
 
@@ -122,18 +104,25 @@ const deleteItem = async (id, desecho, showSum) => {
     const q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desecho", "==", desecho));
     const querySnapshot = await getDocs(q);
 
-    querySnapshot.forEach((doct) => {
+    querySnapshot.forEach(doct => {
       deleteDoc(doc(db, "item", doct.id));
     });
-    showMessage('Desecho eliminado exitosamente.', 'text-bg-danger');
+    showMessage('Desecho eliminado exitosamente.', 'text-bg-success');
 
     sumTotal.value = 0;
     showSum.innerHTML = '';
     showTotalSum(showSum);
-
-  } catch (error) {
-    console.log(error.code, error.message);
+  } catch (e) {
+    console.log(e.message);
   }
+};
+
+const showMessage = (message, color) => {
+  const toastLiveExample = document.getElementById('liveToast');
+  const toast = new Toast(toastLiveExample);
+  res.value = message;
+  msgColor.value = color;
+  toast.show();
 };
 
 const confir = bool => {
@@ -170,9 +159,9 @@ const showTotalSum = element => {
 };
 
 const generatePDF = () => {
-  const pdf = jsPDF();
+  const pdf = new jsPDF();
 
-  pdf.autoTable({ 
+  autoTable(pdf, { 
     html: '#tab', 
     startY: 30, 
     didDrawPage: data => {
@@ -195,7 +184,6 @@ const generatePDF = () => {
       pdf.text(str, 195, pageHeight - 10);
     } 
   });
-
   pdf.save(`Reporte.pdf`);
 };
 

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useUserStore } from '../stores/user';
 import { ref } from 'vue';
 
@@ -11,19 +11,18 @@ const res = ref();
 const validate = ref('needs-validation');
 
 const submitData = async () => {
-    if(document.querySelector('form').checkValidity()) {
-        try {
-            res.value = await userStore.createUser(name.value, email.value, pass.value);
-            setTimeout(() => {
-                userStore.router.push("/autenticacion");
-            }, 4000);
-        
-        } catch (error) {
-            res.value = 'Hubo un problema.';
-            console.log(error.code, error.message);
-        }
+    try {
+        if(!document.querySelector('form').checkValidity()) throw new Error('Llene los campos correctamente.');    
+        res.value = await userStore.createUser(name.value, email.value, pass.value);
+        setTimeout(() => {
+            userStore.router.push("/autenticacion");
+        }, 4000);
+    } catch (e) {
+        res.value = 'Hubo un problema.';
+        console.log(e.message);
+    } finally {
+        validate.value = 'was-validated';
     }
-    validate.value = 'was-validated';
 };
 </script>
 

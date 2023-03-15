@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useUserStore } from '../stores/user';
 import { useMix } from '../composables/mix';
 import { ref } from 'vue';
@@ -16,37 +16,36 @@ const expDate = ref(userStore.userData.expDate);
 const validate = ref('needs-validation');
 
 const submitData = async () => {
-    if(document.getElementById('main').checkValidity()) {
-        try {
-            res.value = await userStore.updateName(name.value);
-            associateRacda();
-        
-        } catch (error) {
-            res.value = 'Hubo un problema.';
-            console.log(error.code, error.message);
-
-        } finally {
-            timer(res, 5000);
-        }
+    try {
+        if(!(document.getElementById('main') as HTMLSelectElement).checkValidity()) throw new Error('Complete los campos correctamente.');
+        res.value = await userStore.updateName(name.value);
+        await associateRacda();
+    } catch (e) {
+        res.value = e.message;
+    } finally {
+        validate.value = 'was-validated';
+        timer(res, 5000);
     }
-    validate.value = 'was-validated';
 };
 
 const selectPhoto = async e => {
-    image.value = e.target.files[0];
-    await uploadPhoto();
+    try {
+        image.value = e.target.files[0];
+        await uploadPhoto();
+    } catch (e) {
+        console.log(e.message);
+    }
 };
 
 const uploadPhoto = async () => {
     try {
-        if(image.value !== null && image.value !== undefined){
-            const storageRef = fileRef(storage, `images/users/${image.value.name}`);
-            const metaData = { contentType: 'image/png'};
-            await uploadBytes(storageRef, image.value, metaData);
-            await loadPhoto();
-        }
-    } catch (error) {
-        console.log(error.code, error.message);
+        if(!image.value) throw new Error('Seleccione una imagen.');
+        const storageRef = fileRef(storage, `images/users/${image.value.name}`);
+        const metaData = { contentType: 'image/png'};
+        await uploadBytes(storageRef, image.value, metaData);
+        await loadPhoto();
+    } catch (e) {
+        console.log(e.message);
     }
 };
 
@@ -55,38 +54,33 @@ const loadPhoto = async () => {
         const url = await getDownloadURL(fileRef(storage, `images/users/${image.value.name}`));
         await associatePhoto(url);
         await userStore.updatePhoto(url);
-
-    } catch (error) {
-        console.log(error.code, error.message);
+    } catch (e) {
+        console.log(e.message);
     }
 };
 
 const associatePhoto = async url => {
     try {
         const docRef = doc(db, "user", userStore.userData.uid);
-
         await setDoc(docRef, {
             url
         }, { merge: true });
-
-    } catch (error) {
-        console.log(error.code, error.message);
+    } catch (e) {
+        console.log(e.message);
     }
 };
 
 const associateRacda = async () => {
     try {
         const docRef = doc(db, "user", userStore.userData.uid);
-
         await setDoc(docRef, {
             expDate: expDate.value
         }, { merge: true });
 
         userStore.userData = {...userStore.userData, expDate: expDate.value};
         userStore.racdaAlert();
-
-    } catch (error) {
-        console.log(error.code, error.message);
+    } catch (e) {
+        console.log(e.message);
     }
 };
 </script>

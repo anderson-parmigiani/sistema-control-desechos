@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { db } from '../firebaseConfig';
 import { doc, deleteDoc, getDocs, query, orderBy, where, collection, addDoc, getDoc, updateDoc } from 'firebase/firestore'; 
@@ -7,7 +7,7 @@ import { useMix } from '../composables/mix';
 import { Toast } from 'bootstrap';
 
 const userStore = useUserStore();
-const { getDateInfo } = useMix();
+const { getDateInfo, iconsFunc } = useMix();
 
 const name = ref(null);
 const racda = ref(null);
@@ -27,210 +27,136 @@ const msgColor = ref('');
 const conf = ref('');
 const res = ref();
 const validate = ref('needs-validation');
-let dTrat = [], dTrans = [];
+
+interface iEmp {
+  name?: string; 
+  rif?: number; 
+  venc?: string; 
+  tel?: string; 
+  email?: string; 
+  uid?: string;
+  id?: string;
+}
+
+let dTrat: iEmp[] = [], dTrans: iEmp[] = [];
 
 const addItem = async (type, emp) => {
-  const getForm = document.querySelector('.fm');
-  res.value = '';
+  try {
+    const tabCont = document.getElementById(`${type}`);
+    const getForm = document.querySelector('.fm');
+    res.value = '';
 
-  if(name.value !== null && !emp.find((item) => item.name === name.value)){
-    nm.value = 'valid';
-  } else if(name.value == null){
-    nm.value = 'invalid';
-    showMessage('Ingrese el nombre.', 'text-bg-danger');
-  } else {
-    nm.value = 'invalid';
-  }
+    if(name.value && !emp.find(item => item.name === name.value)){
+      nm.value = 'valid';
+    } else if(!name.value){
+      showMessage('Ingrese el nombre.', 'text-bg-danger');
+      nm.value = 'invalid';
+    } else {
+      nm.value = 'invalid';
+    }
 
-  if(rif.value !== null && rif.value.toString().length === 9 && !emp.find((item) => item.rif === rif.value)){
-    rv.value = 'valid';
-  } else if(rif.value !== null && rif.value.toString().length !== 9){
-    rv.value='invalid';
-    showMessage('El rif debe tener 9 dígitos.', 'text-bg-danger');
-  } else if(rif.value == null){
-    showMessage('Ingrese el rif.', 'text-bg-danger');
-  } else {
-    rv.value='invalid';
-  }
+    if(rif.value && rif.value.toString().length === 9 && !emp.find(item => item.rif === rif.value)){
+      rv.value = 'valid';
+    } else if(rif.value && rif.value.toString().length !== 9){
+      showMessage('El rif debe tener 9 dígitos.', 'text-bg-danger');
+      rv.value='invalid';
+    } else if(!rif.value){
+      showMessage('Ingrese el rif.', 'text-bg-danger');
+    } else {
+      rv.value='invalid';
+    }
 
-  if(emp.find((item) => item.name === name.value) || emp.find((item) => item.rif === rif.value)){
-    console.log(emp);
-    showMessage('La empresa ya existe.', 'text-bg-danger');
-  }
+    if(emp.find(item => item.name === name.value) || emp.find(item => item.rif === rif.value))
+      showMessage('La empresa ya existe.', 'text-bg-danger');
 
-  if (racda.value !== null && new Date(racda.value) > Date.now()){
-    rac.value = 'valid';
-  } else if(racda.value !== null && new Date(racda.value) < Date.now()){
-    rac.value = 'invalid';
-    showMessage('Racda vencido.', 'text-bg-danger');
-  } else {
-    rac.value = 'invalid';
-    showMessage('Ingrese Racda.', 'text-bg-danger');
-  }
+    if(racda.value && new Date(racda.value).getTime() > Date.now()){
+      rac.value = 'valid';
+    } else if(racda.value && new Date(racda.value).getTime() < Date.now()){
+      showMessage('Racda vencido.', 'text-bg-danger');
+      rac.value = 'invalid';
+    } else {
+      showMessage('Ingrese Racda.', 'text-bg-danger');
+      rac.value = 'invalid';
+    }
 
-  if(tel.value === null || tel.value === undefined || tel.value === ''){
-    showMessage('Ingrese el teléfono correctamente.', 'text-bg-danger');
-  }
+    if(!tel.value)
+      showMessage('Ingrese el teléfono correctamente.', 'text-bg-danger');
 
-  if(email.value === null || email.value === undefined || email.value === ''){
-    showMessage('Ingrese el email.', 'text-bg-danger');
-  }
+    if(!email.value)
+      showMessage('Ingrese el email.', 'text-bg-danger');
 
-  if(getForm.checkValidity()) {
-    if(name.value !== null && rif.value !== null && rif.value.toString().length === 9 && racda.value !== null && new Date(racda.value) > Date.now() && !emp.find((item) => item.name === name.value) && !emp.find((item) => item.rif === rif.value)){
-      dTrat.length = 0;
-      dTrans.length = 0;
-      rac.value = '';
-      nm.value = '';
-      rv.value = '';
-      cargando.value = true;
-      const inputData = {name: name.value, rif: rif.value, venc: racda.value, tel: tel.value, email: email.value, uid: userStore.userData.uid};
+    if((getForm as HTMLSelectElement).checkValidity()) {
+      if(name.value && rif.value && rif.value.toString().length === 9 && racda.value && new Date(racda.value).getTime() > Date.now() && !emp.find(item => item.name === name.value) && !emp.find(item => item.rif === rif.value)){
+        dTrat.length = 0;
+        dTrans.length = 0;
+        rac.value = '';
+        nm.value = '';
+        rv.value = '';
+        cargando.value = true;
+        const inputData = {name: name.value, rif: rif.value, venc: racda.value, tel: tel.value, email: email.value, uid: userStore.userData.uid};
 
-      validate.value = 'needs-validation';
-      try {
-        await addDoc(collection(db, `${type}`), inputData);
+        validate.value = 'needs-validation';
+        const docRef = await addDoc(collection(db, `${type}`), inputData);
+        console.log(docRef.id);
         showMessage('Empresa registrada exitosamente.', 'text-bg-success');
         name.value = racda.value = rif.value = tel.value = email.value = null;
-        await getItems(type);
+        type === 'empTrat' ? dTrat.push({... inputData, id: docRef.id}) : dTrans.push({... inputData, id: docRef.id});
+        showData(tabCont, inputData, docRef.id);
+        iconsFunc(type, conf.value, deleteItem, getItemEdit);
         cargando.value = false;
-      } catch (error) {
-        console.log(error.code, error.message);
+      } else {
+        validate.value = 'was-validated';
       }
-      cargando.value = false;
     } else {
       validate.value = 'was-validated';
     }
-  } else {
-    validate.value = 'was-validated';
+  } catch (e) {
+    console.log(e.message);
   }
 };
 
 const getItems = async type => {
-  const tabCont = document.getElementById(`${type}`);
-
   try {
     const q = query(collection(db, `${type}`), where("uid", "==", userStore.userData.uid), orderBy("name"));
-    tabCont.innerHTML = '';
     const querySnapshot = await getDocs(q);
+    const tabCont = document.getElementById(`${type}`);
+    tabCont.innerHTML = '';
 
-    querySnapshot.forEach((doc) => {
+    querySnapshot.forEach(doc => {
       showData(tabCont, doc.data(), doc.id);
-      if(type == 'empTrat'){
-        dTrat.push({... doc.data(), id: doc.id});
-      } else if(type = 'empTrans'){
-        dTrans.push({... doc.data(), id: doc.id});
-      }
+      type === 'empTrat' ? dTrat.push({... doc.data(), id: doc.id}) : dTrans.push({... doc.data(), id: doc.id});
     });    
 
-    const delIcon = document.querySelectorAll('.bi-trash');
-    delIcon.forEach(i => {
-      const id = i.parentElement.parentElement.firstElementChild.innerHTML;
-      const rf = i.parentElement.parentElement.firstElementChild.nextElementSibling.innerHTML;
-
-      const waitConf = () => {
-        if(conf.value === ''){
-          setTimeout(waitConf, 500);
-        } else if(conf.value === true){
-          i.parentElement.parentElement.remove();
-          deleteItem(id, type, rf);
-        }
-      };
-
-      i.addEventListener("click", waitConf);
-    });
-
-    const editIcon = document.querySelectorAll('.bi-pencil');
-    editIcon.forEach(i => {
-      const id = i.parentElement.parentElement.firstElementChild.innerHTML;
-
-      i.addEventListener("click", () => {
-        getItemEdit(id, type);
-      });
-    });
-
-    const showIcon = document.querySelectorAll('.bi-eye')
-      showIcon.forEach(i => {
-        const id = i.parentElement.parentElement.firstElementChild.innerHTML;
-
-        i.addEventListener("click", () => {
-          getItemEdit(id, type);
-        });
-      });
-
-    const racs = document.querySelectorAll('.calc');
-    racs.forEach(i => {
-      if(new Date(i.textContent) < Date.now()){
-        i.nextElementSibling.classList.add("bg-danger-subtle");
-      } else {
-        i.nextElementSibling.classList.add("bg-success-subtle");
-      }
-    });
-
-  } catch (error) {
-    console.log(error.code, error.message);
+    iconsFunc(type, conf.value, deleteItem, getItemEdit);
+  } catch (e) {
+    console.log(e.message);
   }
 };
 
 const searchTrt = type => {
-  let resulTrt;
   const tableTra = document.getElementById(type);
+  tableTra.innerHTML = '';
+  let resulTrt;
 
-  if(type === 'empTrat'){
+  if(type === 'empTrat')
     resulTrt = dTrat.find(i => i.name.toLowerCase().replace(/\s+/g, '') == tratName.value.toLowerCase().replace(/\s+/g, ''));
-  } else {
+  else
     resulTrt = dTrans.find(i => i.name.toLowerCase().replace(/\s+/g, '') == transName.value.toLowerCase().replace(/\s+/g, ''));
-  }
 
-  if(resulTrt !== undefined){
-    tableTra.innerHTML = '';
+  if(resulTrt){
     showData(tableTra, resulTrt, resulTrt.id);
-
-    const delIcon = document.querySelectorAll('.bi-trash');
-    delIcon.forEach(i => {
-      const id = i.parentElement.parentElement.firstElementChild.innerHTML;
-      const rf = i.parentElement.parentElement.firstElementChild.nextElementSibling.innerHTML;
-
-      const waitConf = () => {
-        if(conf.value === ''){
-          setTimeout(waitConf, 500);
-        } else if(conf.value === true){
-          i.parentElement.parentElement.remove();
-          deleteItem(id, type, rf);
-        }
-      };
-
-      i.addEventListener("click", waitConf);
-    });
-
-    const editIcon = document.querySelectorAll('.bi-pencil');
-    editIcon.forEach(i => {
-      const id = i.parentElement.parentElement.firstElementChild.innerHTML;
-
-      i.addEventListener("click", () => {
-        getItemEdit(id, type);
-      });
-    });
-
-    const showIcon = document.querySelectorAll('.bi-eye');
-    showIcon.forEach(i => {
-      const id = i.parentElement.parentElement.firstElementChild.innerHTML;
-
-      i.addEventListener("click", () => {
-        getItemEdit(id, type);
-      });
-    });
-
-    const racs = document.querySelectorAll('.calc');
-    racs.forEach(i => {
-      if(new Date(i.textContent) < Date.now()){
-        i.nextElementSibling.classList.add("bg-danger-subtle");
-      } else {
-        i.nextElementSibling.classList.add("bg-success-subtle");
-      }
-    });
   } else {
-    getItems(type);
+    if(type === 'empTrat'){
+      dTrat.forEach(emp => {
+        showData(tableTra, emp, emp.id);
+      });
+    } else {
+      dTrans.forEach(emp => {
+        showData(tableTra, emp, emp.id);
+      });
+    }
   }
+  iconsFunc(type, conf.value, deleteItem, getItemEdit);
 };
 
 const showMessage = (message, color) => {
@@ -241,30 +167,26 @@ const showMessage = (message, color) => {
   toast.show();
 };
 
-const deleteItem = async (id, type, rif) => {
+const deleteItem = async (id, type) => {
   try {
-    console.log(rif);
     if(type === 'empTrat'){
-      const dTratFilter = dTrat.filter(item => `J-${item.rif}` !== rif);
-      dTrat = [...dTratFilter];
-    }
-
-    if(type === 'empTrans'){
-      const dTransFilter = dTrans.filter(item => `J-${item.rif}` !== rif);
-      dTrans = [...dTransFilter];
+      const delObj = dTrat.findIndex(i => i.id === id);
+      dTrat.splice(delObj, 1);
+    } else {
+      const delObj = dTrans.findIndex(i => i.id === id);
+      dTrans.splice(delObj, 1);
     }
 
     await deleteDoc(doc(db, `${type}`, id));
     showMessage('Empresa eliminada exitosamente.', 'text-bg-success');
-  } catch (error) {
-    console.log(error.code, error.message);
+  } catch (e) {
+    console.log(e.message);
   }
 };
 
 const getItemEdit = async (id, type) => {
-  name.value = racda.value = rif.value = currType.value = currID.value = typeN.value = tel.value = email.value = null;
-
   try {
+    name.value = racda.value = rif.value = currType.value = currID.value = typeN.value = tel.value = email.value = null;
     const docRef = doc(db, `${type}`, id);
     const docSnap = await getDoc(docRef);
 
@@ -277,49 +199,63 @@ const getItemEdit = async (id, type) => {
       email.value = data.email;
       currType.value = type;
       currID.value = id;
-      if(type == 'empTrans'){
-        typeN.value = 'Empresa de Transporte';
-      } else {
-        typeN.value = 'Empresa Tratante';
-      }
+      if(type == 'empTrans')
+       typeN.value = 'Empresa de Transporte';
+      else
+       typeN.value = 'Empresa Tratante';
     }
-  } catch (error) {
-    console.log(error.code, error.message);
+  } catch (e) {
+    console.log(e.message);
   }
 };
 
 const edit = async() => {
-  const myModal = document.getElementById('disEdit'); 
+  const myModal = document.getElementById('disEdit');
+  const tableTra = document.getElementById(currType.value);
   res.value = '';
 
-  if(name.value !== null){
+  if(name.value)
     nm.value = 'valid';
-  } else {
+  else
     nm.value ='invalid';
-  }
 
-  if(rif.value !== null){
+  if(rif.value)
     rv.value = 'valid';
-  } else {
+  else
     rv.value ='invalid';
-  }
 
-  if (racda.value !== null && new Date(racda.value) > Date.now()){
+  if (racda.value && new Date(racda.value).getTime() > Date.now()){
     rac.value = 'valid';
-  } else if(racda.value !== null && new Date(racda.value) < Date.now()){
-    rac.value = 'invalid';
+  } else if(racda.value && new Date(racda.value).getTime() < Date.now()){
     showMessage('Racda vencido.', 'text-bg-danger');
+    rac.value = 'invalid';
   } else {
     rac.value = 'invalid';
   }
 
   try {
-    if(name.value !== null && name.value !== '' && name.value !== undefined && rif.value !== null && rif.value !== '' && rif.value !== undefined && new Date(racda.value) > Date.now() && tel.value !== null && tel.value !== '' && tel.value !== undefined && email.value !== null && email.value !== '' && email.value !== undefined){
+    if(name.value && rif.value && new Date(racda.value).getTime() > Date.now() && tel.value && email.value){
       cargando.value = true;
       const docRef = doc(db, currType.value, currID.value);
       await updateDoc(docRef, {name: name.value, rif: rif.value, venc: racda.value, tel: tel.value, email: email.value});
       validate.value = 'needs-validation';
-      await getItems(currType.value);
+      tableTra.innerHTML = '';
+
+      if(currType.value === 'empTrat'){
+        const updObj = dTrat.findIndex(i => i.id === currID.value);
+        dTrat[updObj] = {...dTrat[updObj], name: name.value, rif: rif.value, venc: racda.value, tel: tel.value, email: email.value};
+        dTrat.forEach(i => {
+          showData(tableTra, i, i.id);
+        });
+      } else {
+        const updObj = dTrans.findIndex(i => i.id === currID.value);
+        dTrans[updObj] = {...dTrans[updObj], name: name.value, rif: rif.value, venc: racda.value, tel: tel.value, email: email.value};
+        dTrans.forEach(i => {
+          showData(tableTra, i, i.id);
+        });
+      }
+      iconsFunc(currType.value, conf.value, deleteItem, getItemEdit);
+    
       showMessage('Empresa editada exitosamente.', 'text-bg-success');
       name.value = racda.value = rif.value = tel.value = email.value = currType.value = currID.value = null;
       myModal.click();
@@ -327,8 +263,8 @@ const edit = async() => {
     } else {
       validate.value = 'was-validated';
     }
-  } catch (error) {
-    console.log(error.code, error.message);
+  } catch (e) {
+    console.log(e.message);
   }
 };
 

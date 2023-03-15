@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useUserStore } from '../stores/user';
 import { ref } from 'vue';
 import { useMix } from '../composables/mix';
@@ -10,16 +10,21 @@ const email = ref();
 const validate = ref('needs-validation');
 
 const changePassword = async () => {
-    if(document.querySelector('form').checkValidity()) {
+    try {
+        if(!document.querySelector('form').checkValidity()) throw new Error('Ingrese el email correctamente.');
         res.value = await userStore.changePass(email.value);
         timer(res, 7000);
+
         if(userStore.auth.currentUser && res.value === 'Se ha enviado un correo.'){
             setTimeout(() => {
                 userStore.logout();
             }, 7000);
         }
+    } catch (e) {
+        console.log(e.message);
+    } finally {
+        validate.value = 'was-validated';
     }
-    validate.value = 'was-validated';
 };
 </script>
 

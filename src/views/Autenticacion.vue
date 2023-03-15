@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useUserStore } from '../stores/user';
 import { useMix } from '../composables/mix';
 import { ref } from 'vue';
@@ -12,22 +12,25 @@ const checked = ref();
 const validate = ref('needs-validation');
 const local = localStorage.getItem('email');
 
-const remember = () => {
-    if (checked.value == true || checked.value == undefined && local) {
-        localStorage.setItem('email', email.value);
-    } else if (checked.value == false || checked.value == undefined && !local) {
-        localStorage.removeItem('email');
+const submitData = async () => {
+    try {
+        if(!document.querySelector('form').checkValidity()) throw new Error('Complete los campos correctamente.');
+        res.value = await userStore.login(email.value, pass.value);
+        remember();
+    } catch (e) {
+        res.value = e.message;
+    } finally {
+        validate.value = 'was-validated';
+        timer(res, 5000);
     }
 };
 
-const submitData = async () => {
-    if(document.querySelector('form').checkValidity()) {
-        res.value = await userStore.login(email.value, pass.value);
-        remember();
-        timer(res, 5000);
+const remember = () => {
+    if (checked.value === true || checked.value === undefined && local) {
+        localStorage.setItem('email', email.value);
+    } else if (checked.value === false || checked.value === undefined && !local) {
+        localStorage.removeItem('email');
     }
-
-    validate.value = 'was-validated';
 };
 </script>
 
@@ -50,7 +53,7 @@ const submitData = async () => {
                     <div class="row mb-4">
                         <div class="col-5 d-flex justify-content-center">
                             <div class="form-check">
-                                <input class="form-check-input mt-2" type="checkbox" id="checkbox" v-model="checked" :checked="local">
+                                <input class="form-check-input mt-2" type="checkbox" id="checkbox" v-model="checked" :checked=Boolean(local)>
                                 <label class="form-check-label mt-1" for="checkbox">Recuérdame</label>
                             </div>
                         </div>
