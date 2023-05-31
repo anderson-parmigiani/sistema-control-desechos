@@ -4,15 +4,11 @@ import { useUserStore } from '../stores/user';
 const requireAuthInicio = async (to, from, next) => {
   try {
     const userStore = useUserStore();
-  
-    // if(from.path == '/' || from.path == '/usuario' || from.path == '/recuperacion' || from.path == '/empresas' || from.name == 'desecho')
-    //   userStore.loading = false;
-  
     const user = await userStore.currentUser();
   
     if (user && userStore.auth.currentUser.emailVerified){
       if(to.name == 'NotFound'){
-        next('/');
+        next('/app');
       } else {
         await userStore.personalRacda();
         next();
@@ -32,7 +28,7 @@ const authLogin = async (to, from, next) => {
   
     if (!user) next();
     else if (user && !userStore.auth.currentUser.emailVerified) next();
-    else if (user && userStore.auth.currentUser.emailVerified) next("/");
+    else if (user && userStore.auth.currentUser.emailVerified) next("/app");
   } catch (e) {
     console.log(e.message);
   }
@@ -54,7 +50,7 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
+      path: '/app',
       name: 'inicio',
       beforeEnter: requireAuthInicio,
       component: () => import('../views/Inicio.vue')

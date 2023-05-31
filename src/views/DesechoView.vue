@@ -2,17 +2,16 @@
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router'
 import { db } from '../firebaseConfig';
-import { doc, getDoc, getDocs, deleteDoc, query, where, collection, orderBy, addDoc, updateDoc, limit, startAfter, limitToLast, endBefore} from 'firebase/firestore'; 
+import { doc, getDoc, getDocs, deleteDoc, query, where, collection, orderBy, addDoc, updateDoc, limit, startAfter, limitToLast, endBefore, DocumentData} from 'firebase/firestore'; 
 import { useUserStore } from '../stores/user';
 import { useMix } from '../composables/mix';
-import { Toast } from 'bootstrap';
 import VueMultiselect from 'vue-multiselect';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Chart, ChartData } from 'chart.js/auto';
 
 const userStore = useUserStore();
-const { getDateInfo, iconsFunc } = useMix();
+const { getDateInfo, showMessage, res, msgColor } = useMix();
 
 const selectedCP = ref(null);
 const cp = ref(null);
@@ -29,26 +28,21 @@ const eS = ref(null);
 const adding = ref(false);
 const directoryTrans = ref(false);
 const directoryTrat = ref(false);
-const nextDisabled = ref(false);
-const previousDisabled = ref(false);
+const nextDisabled = ref(true);
+const previousDisabled = ref(true);
 const hideCP = ref(false);
-const spac = ref(true);
 const com = ref('');
 const empTrans = ref('');
 const empTrat = ref('');
-const scp = ref('');
 const su = ref('');
-const sf = ref('');
-const sh = ref('');
-const conf = ref<string | boolean>('');
 const sDate = ref('');
 const eDate = ref('');
-const res = ref('');
-const msgColor = ref('');
+const id = ref('');
+const showArray = ref([]), showPdfArray = ref([]);
 const sum = ref(0);
 const validate = ref('needs-validation');
 const tipMov = ref('Todos');
-let dat = [], daTrans = [], daTrat = [], daTransFilt = [], daTratFilt = [], allFiltData = [], it = [];
+let dat = [], daTrans = [], daTrat = [], daTransFilt = [], daTratFilt = [], qts = [], movArray = [];
 let lastVisible = null, firstVisible = null;
 const N_ITEM = 7;
 const CP_OPTIONS = ['g', 'kg', 'tn'];
@@ -56,15 +50,12 @@ const MOV_OPTIONS = ['Todos', 'Entradas', 'Salidas'];
 
 const route = useRoute();
 
-const getName = async () => {
+const getName = async () => { // Obtiene la información del desecho seleccionado por el usuario de la base de datos.
   try {
     const q = query(collection(db, "desecho"), where("uid", "==", userStore.userData.uid));
     const querySnapshot = await getDocs(q);
 
-    querySnapshot.forEach(doc => {
-      dat.push({... doc.data()});
-    });
-
+    querySnapshot.forEach(doc => dat.push({... doc.data()}));
     nombreDesecho.value = dat.find(item => item.desechoID === route.params.name);
     dat.length = 0;
   } catch (e) {
@@ -72,72 +63,57 @@ const getName = async () => {
   }
 };
 
-const getItems = async () => {
+const getItems = async () => { // Obtiene el nombre de las empresas registradas con racda vigente y las almacena en arreglos locales.
   try {
     daTrans.length = 0, daTransFilt.length = 0, daTrat.length = 0, daTratFilt.length = 0;
     let q = query(collection(db, "empTrans"), where("uid", "==", userStore.userData.uid), orderBy("name"));
     let querySnapshot = await getDocs(q);
 
-    querySnapshot.forEach(doc => {
-      daTrans.push({... doc.data()});
-    });
+    querySnapshot.forEach(doc => daTrans.push({... doc.data()}));
 
     daTrans = daTrans.filter(item => new Date(item.venc).getTime() > Date.now());
-    daTrans.forEach(i => {
-      daTransFilt.push(i.name);
-    });
+    daTrans.forEach(i => daTransFilt.push(i.name));
 
     q = query(collection(db, "empTrat"), where("uid", "==", userStore.userData.uid), orderBy("name"));
     querySnapshot = await getDocs(q);
 
-    querySnapshot.forEach(doc => {
-      daTrat.push({... doc.data()});
-    });
+    querySnapshot.forEach(doc => daTrat.push({... doc.data()}));
 
-    daTrat = daTrat.filter(item => new Date(item.venc).getTime() > Date.now())
-    daTrat.forEach(i => {
-      daTratFilt.push(i.name);
-    });
-
+    daTrat = daTrat.filter(item => new Date(item.venc).getTime() > Date.now());
+    daTrat.forEach(i => daTratFilt.push(i.name));
   } catch (e) {
     console.log(e.message);
   }
 };
 
-const checkData = async () => {
+const checkData = async () => { // Valida los datos del formulario.
   try {
-    const getForm = document.querySelector('form');
-
-    cp.value ? scp.value = 'valid' : scp.value = 'invalid';
     selectedCP.value ? su.value = 'valid' : su.value = 'invalid';
-    fecha.value ? sf.value = 'valid' : sf.value = 'invalid';
-    hora.value ? sh.value = 'valid' : sh.value = 'invalid';
 
-    if(getForm.checkValidity()) {
-      if(cp.value && selectedCP.value && fecha.value && hora.value && (eS.value === 'Entrada' || eS.value === 'Salida')){
-        const foundRep = it.find(i => i.fecha == fecha.value && i.hora == hora.value)
-        if(!foundRep) {
-          if(racdaTrans.value && racdaTrat.value){
-            if(new Date(racdaTrans.value).getTime() > Date.now() && new Date(racdaTrat.value).getTime() > Date.now()){
-              await getData();
-            }
-          } else if(!racdaTrans.value && !racdaTrat.value){
+    if(cp.value && selectedCP.value && fecha.value && hora.value && eS.value){
+      const foundRep = movArray.find(i => i.fecha === fecha.value && i.hora === hora.value);
+
+      if(!foundRep) {
+        if(racdaTrans.value && racdaTrat.value){
+          if(new Date(racdaTrans.value).getTime() > Date.now() && new Date(racdaTrat.value).getTime() > Date.now())
             await getData();
-          } else if(racdaTrans.value){
-            if(new Date(racdaTrans.value).getTime() > Date.now()){
-              await getData();
-            }
-          } else if(racdaTrat){
-            if(new Date(racdaTrat.value).getTime() > Date.now()){
-              await getData();
-            }
-          }
-        } else {
-          showMessage('Ya existe un movimiento con la misma fecha y hora.', 'text-bg-danger');
+          else
+            showMessage('Racda de empresa vencido.', 'text-bg-danger');
+        } else if(!racdaTrans.value && !racdaTrat.value){
+          await getData();
+        } else if(racdaTrans.value){
+          if(new Date(racdaTrans.value).getTime() > Date.now())
+            await getData();
+          else
+            showMessage('Racda de empresa vencido.', 'text-bg-danger');
+        } else if(racdaTrat.value){
+          if(new Date(racdaTrat.value).getTime() > Date.now())
+            await getData();
+          else
+          showMessage('Racda de empresa vencido.', 'text-bg-danger');
         }
       } else {
-        showMessage('Complete los campos requeridos correctamente.', 'text-bg-danger');
-        validate.value = 'was-validated';
+        showMessage('Ya existe un movimiento con la misma fecha y hora.', 'text-bg-danger');
       }
     } else {
       showMessage('Complete los campos requeridos correctamente.', 'text-bg-danger');
@@ -148,67 +124,67 @@ const checkData = async () => {
   }
 };
 
-const getData = async () => {
-  try {
-    const isInteg = Number.isInteger(cp.value);
+const getData = async () => { // Prepara y almacena toda la información del movimiento en un objeto.
+  try {                       
+    const isInteg = Number.isInteger(cp.value); // Indica si el número es un entero o un float.
     const inputData = ref(null);
     adding.value = true;
 
-    if(selectedCP.value == 'g') cp.value /= 1000;
-    else if(selectedCP.value == 'tn') cp.value *= 1000; 
+    if(selectedCP.value === 'g') cp.value /= 1000; // Hace las conversiones necesarias para pasar todo a kg.
+    else if(selectedCP.value === 'tn') cp.value *= 1000; 
     
-    if(eS.value === 'Salida') cp.value *= -1;
+    if(eS.value === 'Salida') cp.value *= -1; // Si el movimiento es una salida se pone el peso negativo.
 
-    if(!empTrans.value) empTrans.value = '';
-
+    if(!empTrans.value) empTrans.value = ''; // En caso de no indicar ninguna empresa se guardan los campos vacios.
     if(!empTrat.value) empTrat.value = '';
 
     inputData.value = {desecho: nombreDesecho.value.desecho, desechoID: route.params.name, cp: cp.value, typeCP: Math.sign(cp.value), selectedCP: selectedCP.value, integ: isInteg, fecha: fecha.value, hora: hora.value, empTrans: empTrans.value, empTrat: empTrat.value, com: com.value, uid: userStore.userData.uid};
     await addItem(inputData.value);
-    scp.value = su.value = sf.value = sh.value = '';
-    validate.value = 'needs-validation';
+    
+    su.value = '', validate.value = 'needs-validation';
     cp.value = selectedCP.value = fecha.value = hora.value = racdaTrans.value = racdaTrat.value = rifTrans.value = rifTrat.value = eS.value = null;
     empTrans.value = empTrat.value = com.value = '';
     await initial();
-
   } catch (e) {
     console.log(e.message);
   }
 };
 
-const addItem = async data => {
+const addItem = async data => { // Registra el movimiento en la base de datos y registra en caso necesario las empresas de servicio que no estén.
   try {
-    const q = query(collection(db, "empTrans"), where("uid", "==", userStore.userData.uid), where("rif", "==", rifTrans.value));
-    const qs = query(collection(db, "empTrat"), where("uid", "==", userStore.userData.uid), where("rif", "==", rifTrat.value));
-
-    await addDoc(collection(db, "item"), data);
+    await addDoc(collection(db, "item"), data); // Registro del movimiento en la base de datos.
     showMessage('Movimiento registrado exitosamente.', 'text-bg-success');
 
-    if(rifTrans.value && rifTrat.value){
-      const querySnapshot = await getDocs(q);
-      const querySnap = await getDocs(qs);
+    if(rifTrans.value || rifTrat.value){ // En caso de indicar alguna empresa manualmente, se registra si no está en la base de datos.
+      const q = query(collection(db, "empTrans"), where("uid", "==", userStore.userData.uid), where("rif", "==", rifTrans.value));
+      const qs = query(collection(db, "empTrat"), where("uid", "==", userStore.userData.uid), where("rif", "==", rifTrat.value));
 
-      if(querySnapshot.empty === true && querySnap.empty === true){
-        await addDoc(collection(db, "empTrans"), {name: empTrans.value, rif: rifTrans.value, venc: racdaTrans.value, uid: userStore.userData.uid});
-        await addDoc(collection(db, "empTrat"), {name: empTrat.value, rif: rifTrat.value, venc: racdaTrat.value, uid: userStore.userData.uid});
-        showMessage('Empresas registradas exitosamente.', 'text-bg-success');
-        await getItems();
-      }
-    } else if(rifTrans.value){
-      const querySnapshot = await getDocs(q);
+      if(rifTrans.value && rifTrat.value){
+        const querySnapshot = await getDocs(q);
+        const querySnap = await getDocs(qs);
 
-      if(querySnapshot.empty === true){
-        await addDoc(collection(db, "empTrans"), {name: empTrans.value, rif: rifTrans.value, venc: racdaTrans.value, uid: userStore.userData.uid});
-        await getItems();
-        showMessage('Empresa de Transporte registrada exitosamente.', 'text-bg-success');
-      }
-    } else if(rifTrat.value){
-      const querySnap = await getDocs(qs);
+        if(querySnapshot.empty === true && querySnap.empty === true){
+          await addDoc(collection(db, "empTrans"), {name: empTrans.value, rif: rifTrans.value, venc: racdaTrans.value, uid: userStore.userData.uid});
+          await addDoc(collection(db, "empTrat"), {name: empTrat.value, rif: rifTrat.value, venc: racdaTrat.value, uid: userStore.userData.uid});
+          showMessage('Empresas registradas exitosamente.', 'text-bg-success');
+          await getItems();
+        }
+      } else if(rifTrans.value){
+        const querySnapshot = await getDocs(q);
 
-      if(querySnap.empty === true){
-        await addDoc(collection(db, "empTrat"), {name: empTrat.value, rif: rifTrat.value, venc: racdaTrat.value, uid: userStore.userData.uid});
-        await getItems();
-        showMessage('Empresa de Tratamiento registrada exitosamente.', 'text-bg-success');
+        if(querySnapshot.empty === true){
+          await addDoc(collection(db, "empTrans"), {name: empTrans.value, rif: rifTrans.value, venc: racdaTrans.value, uid: userStore.userData.uid});
+          await getItems();
+          showMessage('Empresa de Transporte registrada exitosamente.', 'text-bg-success');
+        }
+      } else if(rifTrat.value){
+        const querySnap = await getDocs(qs);
+
+        if(querySnap.empty === true){
+          await addDoc(collection(db, "empTrat"), {name: empTrat.value, rif: rifTrat.value, venc: racdaTrat.value, uid: userStore.userData.uid});
+          await getItems();
+          showMessage('Empresa de Tratamiento registrada exitosamente.', 'text-bg-success');
+        }
       }
     }
   } catch (e) {
@@ -216,149 +192,94 @@ const addItem = async data => {
   }
 };
 
-const showMessage = (message, color) => {
-  const toastLiveExample = document.getElementById('liveToast');
-  const toast = new Toast(toastLiveExample);
-  res.value = message;
-  msgColor.value = color;
-  toast.show();
-};
-
-const initial = async () => {
-  try {
-    const tabCont = document.getElementById('table-content');
-    const pdfTabCont = document.getElementById('content');
-    const butto = document.getElementById('but');
-    previousDisabled.value = true;
-    nextDisabled.value = true;
-    it.length = 0;
+const initial = async () => { // Consulta en la base de datos los movimientos del desecho para luego mostrarlos
+  try {               
+    previousDisabled.value = true, nextDisabled.value = true;
+    movArray.length = 0;
 
     let q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"));
-    let qt = q;
-    spac.value = true;
-    tabCont.innerHTML = '';
     let querySnapshot = await getDocs(q);
-    sum.value = 0;
 
+    sum.value = 0;
     if(tipMov.value !== 'Todos') hideCP.value = true;
     
-    adding.value = false;
-
     querySnapshot.forEach(doc => {
       const data = doc.data();
-      it.push(data);
+      movArray.push({... data, id: doc.id});
       sum.value += data.cp;
     });
 
-    sumFunc(sum.value);
+    await sumFunc(sum.value);
 
     if(sDate.value && !eDate.value){
       if(tipMov.value == 'Entradas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(N_ITEM));
-        qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"));
+        qts = movArray.filter(i => i.typeCP === 1 && new Date(i.fecha) >= new Date(sDate.value));
       } else if(tipMov.value == 'Salidas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(N_ITEM));
-        qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"));
+        qts = movArray.filter(i => i.typeCP === -1 && new Date(i.fecha) >= new Date(sDate.value));
       } else {
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(N_ITEM));
-        qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"));
+        qts = movArray.filter(i => new Date(i.fecha) >= new Date(sDate.value));
       }
 
     } else if(!sDate.value && eDate.value){
       if(tipMov.value == 'Entradas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(N_ITEM));
-        qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"));
+        qts = movArray.filter(i => i.typeCP === 1 && new Date(i.fecha) <= new Date(eDate.value));
       } else if(tipMov.value == 'Salidas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(N_ITEM));
-        qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"));
+        qts = movArray.filter(i => i.typeCP === -1 && new Date(i.fecha) <= new Date(eDate.value));
       } else {
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(N_ITEM));
-        qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"));
+        qts = movArray.filter(i => new Date(i.fecha) <= new Date(eDate.value));
       }
 
     } else if(sDate.value && eDate.value){
       if(tipMov.value == 'Entradas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(N_ITEM));
-        qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"));
+        qts = movArray.filter(i => i.typeCP === 1 && new Date(i.fecha) >= new Date(sDate.value) && new Date(i.fecha) <= new Date(eDate.value));
       } else if(tipMov.value == 'Salidas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(N_ITEM));
-        qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"));
+        qts = movArray.filter(i => i.typeCP === -1 && new Date(i.fecha) >= new Date(sDate.value) && new Date(i.fecha) <= new Date(eDate.value));
       } else {
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(N_ITEM));
-        qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"));
+        qts = movArray.filter(i => new Date(i.fecha) >= new Date(sDate.value) && new Date(i.fecha) <= new Date(eDate.value));
       }
 
     } else {
       if(tipMov.value == 'Entradas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(N_ITEM));   
-        qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"));      
+        qts = movArray.filter(i => i.typeCP === 1); 
       } else if(tipMov.value == 'Salidas'){
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(N_ITEM));    
-        qt = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"));          
+        qts = movArray.filter(i => i.typeCP === -1);        
       } else {
         q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), limit(N_ITEM));
+        qts = movArray;
       }
     }
 
-    tabCont.innerHTML = '';
+    showArray.value.length = 0;
     querySnapshot = await getDocs(q);
-    let filterSum = await getDocs(qt);
     adding.value = false;
-
-    if(querySnapshot.empty == false) spac.value= false;
 
     querySnapshot.forEach(doc => {
       const data = doc.data();
-      showData(tabCont, data, doc.id);
+      showArray.value.push({... data, rCP: cpShowConvert(data), id: doc.id});
     });
 
-    pdfTabCont.innerHTML = '';
-    allFiltData.length = 0;
+    showPdfArray.value.length = 0;
     sum.value = 0;
 
-    filterSum.forEach(doc => {
-      const data = doc.data();
-      allFiltData.push({... data});
-      showData(pdfTabCont, data, doc.id);
-      sum.value += data.cp;
+    qts.forEach(mov => {
+      showPdfArray.value.push({... mov, rCP: cpShowConvert(mov)});
+      sum.value += mov.cp;
     });
 
     hideCP.value = false;
 
-    if(querySnapshot.docs.length === 6){
-      tabCont.innerHTML +=`
-                            <br><br>
-                          `; 
-    } else if(querySnapshot.docs.length === 5){
-      butto.classList.add("mt-4");
-      tabCont.innerHTML +=`
-                            <br><br><br>
-                          `; 
-    } else if(querySnapshot.docs.length === 4){
-      tabCont.innerHTML +=`
-                            <br><br><br><br><br>
-                          `; 
-    } else if(querySnapshot.docs.length === 3){
-      tabCont.innerHTML +=`
-                            <br><br><br><br><br><br><br>
-                          `; 
-    } else if(querySnapshot.docs.length === 2){
-      butto.classList.add("mt-4");
-      tabCont.innerHTML +=`
-                            <br><br><br><br><br><br><br><br>
-                          `;
-    } else if(querySnapshot.docs.length === 1){
-      tabCont.innerHTML +=`
-                            <br><br><br><br><br><br><br><br><br><br>
-                          `; 
-    }
-
-    iconsFunc('mov', conf.value, deleteItem, getItemEdit);
-
-    if(querySnapshot.docs.length < N_ITEM){
-      nextDisabled.value = true;
-    }
-    else if(querySnapshot.docs.length === 7){
+    if(querySnapshot.docs.length === 7){
       lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
       q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
       querySnapshot = await getDocs(q);
@@ -369,262 +290,166 @@ const initial = async () => {
   }
 };
 
-const next = async () => {
+const next = async () => { // Consulta en la base de datos los siguientes movimientos para luego muestrarlos
   try {
-    const tabCont = document.getElementById('table-content');
-    const butto = document.getElementById('but');
+    nextDisabled.value = true, previousDisabled.value = true;
     let q;
-    nextDisabled.value = true;
 
-    if(sDate.value && !eDate.value){
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      }
+    const nextQuery = () => {
+      if(sDate.value && !eDate.value){
+        if(tipMov.value == 'Entradas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
+        } else if(tipMov.value == 'Salidas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
+        } else {
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
+        }
 
-    } else if(!sDate.value && eDate.value){
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      }
+      } else if(!sDate.value && eDate.value){
+        if(tipMov.value == 'Entradas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
+        } else if(tipMov.value == 'Salidas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
+        } else {
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
+        }
 
-    } else if(sDate.value && eDate.value){
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      }    
+      } else if(sDate.value && eDate.value){
+        if(tipMov.value == 'Entradas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
+        } else if(tipMov.value == 'Salidas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
+        } else {
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
+        }    
 
-    } else {
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
       } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));      
+        if(tipMov.value == 'Entradas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
+        } else if(tipMov.value == 'Salidas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
+        } else {
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));      
+        }
       }
     }
-    
-    spac.value = true;
-    tabCont.innerHTML = '';
+
+    nextQuery();
+    showArray.value.length = 0;
     let querySnapshot = await getDocs(q);
     adding.value = false;
 
     lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
 
-    if(querySnapshot.empty === false) spac.value= false;
-
     querySnapshot.forEach(doc => {
-      const data = doc.data();
-      showData(tabCont, data, doc.id);
+      const data: DocumentData = doc.data();
+      showArray.value.push({... data, rCP: cpShowConvert(data), id: doc.id});
     });
 
-    if(querySnapshot.docs.length === 7){
+    if(querySnapshot.docs.length === 7)
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 7];
-    } else if(querySnapshot.docs.length === 6){
+    else if(querySnapshot.docs.length === 6)
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 6];
-      tabCont.innerHTML +=`
-                            <br><br>
-                          `; 
-    } else if(querySnapshot.docs.length === 5){
+    else if(querySnapshot.docs.length === 5)
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 5];
-      butto.classList.add("mt-4");
-      tabCont.innerHTML +=`
-                            <br><br><br>
-                          `; 
-    } else if(querySnapshot.docs.length === 4){
+    else if(querySnapshot.docs.length === 4)
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 4];
-      tabCont.innerHTML +=`
-                            <br><br><br><br><br>
-                          `; 
-    } else if(querySnapshot.docs.length === 3){
+    else if(querySnapshot.docs.length === 3)
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 3];
-      tabCont.innerHTML +=`
-                            <br><br><br><br><br><br><br>
-                          `; 
-    } else if(querySnapshot.docs.length === 2){
+    else if(querySnapshot.docs.length === 2)
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 2];
-      butto.classList.add("mt-4");
-      tabCont.innerHTML +=`
-                            <br><br><br><br><br><br><br><br>
-                          `; 
-    } else if(querySnapshot.docs.length === 1){
+    else if(querySnapshot.docs.length === 1)
       firstVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
-      tabCont.innerHTML +=`
-                            <br><br><br><br><br><br><br><br><br><br>
-                          `; 
-    }
-    
-    iconsFunc('mov', conf.value, deleteItem, getItemEdit);
 
-    if(sDate.value && !eDate.value){
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      }
-
-    } else if(!sDate.value && eDate.value){
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      }
-
-    } else if(sDate.value && eDate.value){
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      }
-
-    } else {
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), startAfter(lastVisible), limit(N_ITEM));      
-      }
-    }
-
+    nextQuery();
     querySnapshot = await getDocs(q);
     previousDisabled.value = false;
-    nextDisabled.value = false;
-
-    if(querySnapshot.docs.length === 0) nextDisabled.value = true;
-
+    if(querySnapshot.docs.length > 0) nextDisabled.value = false;
   } catch (e) {
     console.log(e.message);
   }
 };
 
-const prev = async () => {
+const prev = async () => { // Consulta en la base de datos los movimientos anteriores para luego mostrarlos.
   try {
-    const tabCont = document.getElementById('table-content');
-    const butto = document.getElementById('but');
+    previousDisabled.value = true, nextDisabled.value = true;
     let q;
-    previousDisabled.value = true;
 
-    butto.classList.remove("mt-4");
+    const prevQuery = () => {
+      if(sDate.value && !eDate.value){
+        if(tipMov.value == 'Entradas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        } else if(tipMov.value == 'Salidas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        } else {
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        }
 
-    if(sDate.value && !eDate.value){
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+      } else if(!sDate.value && eDate.value){
+        if(tipMov.value == 'Entradas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        } else if(tipMov.value == 'Salidas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        } else {
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        }
+
+      } else if(sDate.value && eDate.value){
+        if(tipMov.value == 'Entradas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        } else if(tipMov.value == 'Salidas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        } else {
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        }
+
       } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
-      }
-
-    } else if(!sDate.value && eDate.value){
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
-      }
-
-    } else if(sDate.value && eDate.value){
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
-      }
-
-    } else {
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        if(tipMov.value == 'Entradas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        } else if(tipMov.value == 'Salidas'){
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        } else {
+          q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limitToLast(N_ITEM));
+        }
       }
     }
 
-    spac.value = true;
-    tabCont.innerHTML = '';
+    prevQuery();
+    showArray.value.length = 0;
     let querySnapshot = await getDocs(q);
     adding.value = false;
 
     lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
     firstVisible = querySnapshot.docs[querySnapshot.docs.length - 7];
-
-    if(querySnapshot.empty == false) spac.value= false;
     
     querySnapshot.forEach(doc => {
-      const data = doc.data();
-      showData(tabCont, data, doc.id);
+      const data: DocumentData = doc.data();
+      showArray.value.push({... data, rCP: cpShowConvert(data), id: doc.id});
     });
 
-    iconsFunc('mov', conf.value, deleteItem, getItemEdit);
-
-    if(sDate.value && !eDate.value){
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(N_ITEM));
-      }
-
-    } else if(!sDate.value && eDate.value){
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(N_ITEM));
-      }
-
-    } else if(sDate.value && eDate.value){
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("fecha", ">=", sDate.value), where("fecha", "<=", eDate.value), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(N_ITEM));
-      }
-
-    } else {
-      if(tipMov.value == 'Entradas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", 1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(N_ITEM));
-      } else if(tipMov.value == 'Salidas'){
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), where("typeCP", "==", -1), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(N_ITEM));
-      } else {
-        q = query(collection(db, "item"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name), orderBy("fecha", "desc"), orderBy("hora", "desc"), endBefore(firstVisible), limit(N_ITEM));
-      }
-    }
-
+    prevQuery();
     querySnapshot = await getDocs(q);
     nextDisabled.value = false;
-    previousDisabled.value = false;
-
-    if(querySnapshot.docs.length == 0) previousDisabled.value = true;
-
+    if(querySnapshot.docs.length > 0) previousDisabled.value = false;
   } catch (e) {
     console.log(e.message);
   }
 }
 
-const deleteItem = async id => {
+const cpShowConvert = data => { // convierte el cp antes de mostrarlo.
+  const rCP = ref(data.cp);
+
+  if(data.selectedCP === 'g'){
+    if(data.integ) rCP.value = Math.round(rCP.value * 1000);
+    else rCP.value = Math.round(1000 * (rCP.value * 1000)) / 1000;
+  } else if(data.selectedCP === 'tn'){
+    if(data.integ) rCP.value = Math.round(rCP.value / 1000);
+    else rCP.value = Math.round(1000 * (rCP.value / 1000)) / 1000;
+  }
+  return rCP.value;
+}
+
+const deleteItem = async id => { // Borra el movimiento de la base de datos.
   try {
     await deleteDoc(doc(db, "item", id));
     showMessage('Movimiento eliminado exitosamente.', 'text-bg-success');
@@ -634,7 +459,7 @@ const deleteItem = async id => {
   }
 };
 
-const getItemEdit = async id => {
+const getItemEdit = async id => { // Trae la información de un movimiento de la base de datos.
   try {
     refresh();
 
@@ -672,7 +497,7 @@ const getItemEdit = async id => {
   }
 }
 
-const edit = async () => {
+const edit = async () => { // Edita un movimiento de la base de datos.
   try {
     const myModal = document.getElementById('disEdit'); 
 
@@ -708,52 +533,26 @@ const edit = async () => {
   }
 };
 
-const sumFunc = async sum => {
+const sumFunc = async sum => { // Busca el desecho en la base de datos para luego editar la suma total en peso del desecho.
   try {
     const q = query(collection(db, "desecho"), where("uid", "==", userStore.userData.uid), where("desechoID", "==", route.params.name));
     const querySnapshot = await getDocs(q);
-
-    querySnapshot.forEach(doc => {
-      editSum(doc.id, sum);
-    });
+    querySnapshot.forEach(doc => editSum(doc.id, sum));
   } catch (e) {
     console.log(e.message);    
   }
 };
 
-const editSum = async (id, sum) => {
+const editSum = async (id, sum) => { // Edita en la base de datos la suma total en peso del desecho.
   try {
     const docRef = doc(db, "desecho", id);
     await updateDoc(docRef, {cp: sum});
-
   } catch (e) {
     console.log(e.message); 
   }
 };
 
-const showData = (table, data, id) => {
-  const rCP = ref(data.cp);
-
-  if(data.selectedCP === 'g'){
-    if(data.integ) rCP.value = Math.round(rCP.value * 1000);
-    else rCP.value = Math.round(1000 * (rCP.value * 1000)) / 1000;
-
-  } else if(data.selectedCP === 'tn'){
-    if(data.integ) rCP.value = Math.round(rCP.value / 1000);
-    else rCP.value = Math.round(1000 * (rCP.value / 1000)) / 1000;
-  }
-
-  table.innerHTML +=`
-                      <tr>
-                        <td hidden>${id}</td>
-                        <td class="text-center w-25">${getDateInfo(data.fecha)}</td>
-                        <td class="text-center w-25">${data.hora}</td>
-                        <td class="text-center w-25 color">${rCP.value} ${data.selectedCP}<i class="bi bi-trash float-end me-3" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i><i class="bi bi-pencil float-end me-4" data-bs-toggle="modal" data-bs-target="#editItemModal" style="cursor: pointer;"></i><i class="bi bi-eye float-end me-4" data-bs-toggle="modal" data-bs-target="#infoItemModal" style="cursor: pointer"></i></td>
-                      </tr>
-                    `;
-};
-
-const testy = op => {
+const testy = op => { // Cambia el input de la empresa en el formulario (lista o manual).
   if(op === 'Trans'){
     directoryTrans.value = !directoryTrans.value;
     racdaTrans.value = rifTrans.value = null;
@@ -765,14 +564,7 @@ const testy = op => {
   }
 };
 
-const confir = bool => {
-  conf.value = bool;
-  setTimeout(() => {
-    conf.value = '';
-  }, 550);
-};
-
-const refresh = () => {
+const refresh = () => { // Resetea los valores del formulario.
   cp.value = selectedCP.value = intege.value = fecha.value = hora.value = empTrans.value = empTrat.value = currID.value = com.value = eS.value = null;
   setTimeout(() => {
     directoryTrans.value = true;
@@ -784,7 +576,7 @@ const refresh = () => {
   }, 50);
 };
 
-const generatePDF = () => {
+const generatePDF = () => { // Genera un pdf con los movimientos solicitados.
   const pdf = new jsPDF();
 
   autoTable(pdf, { 
@@ -833,7 +625,7 @@ const generatePDF = () => {
     pdf.save(`Reporte_${nombreDesecho.value.desecho}.pdf`);
 };
 
-const showGraphic = () => {
+const showGraphic = () => { // Muestra un gráfico tomando en cuenta los movimientos solicitados.
   const ctx = <HTMLCanvasElement>document.getElementById('graphic');
   let chartStatus = Chart.getChart('graphic');
   if (chartStatus != undefined) chartStatus.destroy();
@@ -842,7 +634,7 @@ const showGraphic = () => {
   let cpmAG = [], cpmAR = [], all = [], green = [], red = [], finalmAG = [], finalmAR = [];
   let data = {};
 
-  allFiltData.forEach(i => {
+  qts.forEach(i => {
     if((tipMov.value !== 'Todos')){
       mA.push(getMA(i.fecha));
       cpmA.push({cp: i.cp, fecha: getMA(i.fecha)});
@@ -1055,7 +847,6 @@ const critPoints = data => {
 //       const docRef = doc(db, "item", document.id);
 //       updateDoc(docRef, {typeCP: Math.sign(data.cp)});
 //     });
-
 //   } catch (error) {
 //     console.log(error.code, error.message);
 //   }
@@ -1071,10 +862,10 @@ onMounted(() => {
 
 <template>
   <div class="container">
+    <!-- Sección superior -->
     <div class="d-inline-block d-xxl-none">
       <RouterLink class="btn btn-primary mt-1 mt-xxl-4" to="/"><i class="bi bi-arrow-left" style="font-size: 20px;"></i></RouterLink>
     </div>
-
     <div class="d-none d-xxl-flex">
       <RouterLink class="btn btn-primary mt-3 mt-xxl-4" to="/"><i class="bi bi-arrow-left" style="font-size: 20px;"></i></RouterLink>
       <div class="d-xxl-flex ms-auto mt-auto d-none">
@@ -1087,7 +878,6 @@ onMounted(() => {
       <p v-if="userStore.wait == 2" class="text-danger ms-auto mt-3 mt-xxl-4">Renueve el Racda</p>
       <p v-if="userStore.wait == 3" class="text-warning ms-auto mt-3 mt-xxl-4">Ingrese el Racda</p>
     </div>
-
     <p class="text-center mt-4 mb-1 lead d-none d-xxl-block">{{nombreDesecho?.desecho}}</p>
     <p class="text-center lead mb-4 d-none d-xxl-block">Peso Total: <span v-if="!hideCP">{{Number.isInteger(sum) ? sum : parseFloat(sum.toFixed(4))}} kg</span><span v-else>0 kg</span></p>
     <p class="ss mt-1 lead d-xxl-none">{{nombreDesecho?.desecho}}</p>
@@ -1099,28 +889,28 @@ onMounted(() => {
       <div class="ms-1 pt-3 mt-3">Salida</div>
     </div>
     <button v-if="userStore.wait == 1" class="btn btn-primary d-xxl-none float-end" style="margin-top: 1.6rem" type="button" data-bs-toggle="modal" data-bs-target="#newItemModal" @click="refresh"><i class="bi bi-plus-lg" style="font-size: 20px;"></i></button>
-    <div class="d-flex float-start ">
+    <div class="d-flex float-start">
       <div class="col-3 me-xl-5 me-3 ps-xxl-5 pe-5 pe-xl-4" style="margin-left: 5.2rem!important">
-      <VueMultiselect
-                  v-model="tipMov"
-                  :options="MOV_OPTIONS"
-                  :searchable="false"
-                  :allow-empty="false"
-                  :show-labels="false"
-                  placeholder="Todos"
-                  @select="initial"
-      />
+        <VueMultiselect
+                    v-model="tipMov"
+                    :options="MOV_OPTIONS"
+                    :searchable="false"
+                    :allow-empty="false"
+                    :show-labels="false"
+                    placeholder="Todos"
+                    @select="initial"
+        />
       </div>
-      <div class="mb-0 mb-xxl-4 col-9">
+      <div class="d-flex mb-0 mb-xxl-4 col-9">
         <label for="startDate" class="ms-2 ms-xl-3 ms-xxl-4 ps-xxl-1 form-label lead">Desde:</label>
-        <input type="date" class="ms-1 me-3 form-control cw" id="startDate" v-model="sDate" @change="initial">
+        <input type="date" class="ms-1 me-3 form-control" id="startDate" v-model="sDate" @change="initial">
         <label for="endDate" class="form-label lead">Hasta:</label>
-        <input type="date" class="ms-1 form-control cw" id="endDate" v-model="eDate" @change="initial">
+        <input type="date" class="ms-1 form-control" id="endDate" v-model="eDate" @change="initial">
         <button class="btn btn-primary ms-4 ms-xxl-5" @click="generatePDF" type="button"><i class="bi bi-printer"></i></button>
         <button class="btn btn-primary ms-4 ms-xxl-3" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button>
       </div>
     </div>
-
+    <!-- Modal para registrar movimiento -->
     <div class="modal fade" id="newItemModal" tabindex="-1" aria-labelledby="newItemModal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -1132,15 +922,15 @@ onMounted(() => {
             <form @submit.prevent="checkData" :class="`row g-3 ${validate}`" novalidate>
               <div class="col-3 mt-3">
                 <label for="fecha" class="form-label">Fecha*</label>
-                <input type="date" :class="`form-control ${sf}`" id="fecha" v-model="fecha" required>
+                <input type="date" class="form-control" id="fecha" v-model="fecha" required>
               </div>
               <div class="col-3 mt-3">
                 <label for="hora" class="form-label">Hora*</label>
-                <input type="time" :class="`form-control ${sh}`" id="hora" v-model="hora" required>
+                <input type="time" class="form-control" id="hora" v-model="hora" required>
               </div>
               <div class="col-3 mt-3">
                 <label for="CP" class="form-label">Peso*</label>
-                <input type="number" min="0.001" step="0.001" :class="`form-control ${scp}`" id="CP" oninput="validity.valid||(value='');" v-model="cp" required>
+                <input type="number" min="0.001" step="0.001" class="form-control" id="CP" oninput="validity.valid||(value='');" v-model="cp" required>
               </div>
               <div :class="`col-1 mt-3 ${su}`">
                 <label class="form-label">Unidad*</label>
@@ -1241,7 +1031,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-        
+    <!-- Modal para editar movimiento -->
     <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -1253,15 +1043,15 @@ onMounted(() => {
             <form @submit.prevent="edit" :class="`row g-3 ${validate}`" novalidate>
               <div class="col-3 mt-3">
                 <label for="fecha" class="form-label">Fecha*</label>
-                <input type="date" :class="`form-control ${sf}`" id="fecha" v-model="fecha" required>
+                <input type="date" class="form-control" id="fecha" v-model="fecha" required>
               </div>
               <div class="col-3 mt-3">
                 <label for="hora" class="form-label">Hora*</label>
-                <input type="time" :class="`form-control ${sh}`" id="hora" v-model="hora" required>
+                <input type="time" class="form-control" id="hora" v-model="hora" required>
               </div>
               <div class="col-3 mt-3">
                 <label for="CP" class="form-label">Peso*</label>
-                <input type="number" min="0.001" step="0.001" :class="`form-control ${scp}`" id="CP" oninput="validity.valid||(value='');" v-model="cp" required>
+                <input type="number" min="0.001" step="0.001" class="form-control" id="CP" oninput="validity.valid||(value='');" v-model="cp" required>
               </div>
               <div :class="`col-1 mt-3 ${su}`">
                 <label class="form-label">Unidad*</label>
@@ -1324,7 +1114,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-
+    <!-- Modal para mostrar más información de un movimiento -->
     <div class="modal fade" id="infoItemModal" tabindex="-1" aria-labelledby="infoItemModal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -1336,7 +1126,7 @@ onMounted(() => {
             <form @submit.prevent="" :class="`row g-3 ${validate}`" novalidate>
               <div class="col-6 mt-3">
                 <label for="CP" class="form-label">Peso</label>
-                <input type="number" step="0.001" :class="`form-control ${scp}`" id="CP" v-model="cp" readonly required>
+                <input type="number" step="0.001" class="form-control" id="CP" v-model="cp" readonly required>
               </div>
               <div :class="`col-2 mt-3 ${su}`">
                 <label for="unidades" class="form-label">Unidad</label>
@@ -1359,12 +1149,12 @@ onMounted(() => {
               </div>
               <div class="col-8 mt-3">
                 <label for="fecha" class="form-label">Fecha</label>
-                <input type="date" :class="`form-control ${sf}`" id="fecha" v-model="fecha" readonly required>
+                <input type="date" class="form-control" id="fecha" v-model="fecha" readonly required>
               </div>
               <div class="col-1"></div>
               <div class="col-3 mt-3">
                 <label for="hora" class="form-label">Hora</label>
-                <input type="time" :class="`form-control ${sh}`" id="hora" v-model="hora" readonly required>
+                <input type="time" class="form-control" id="hora" v-model="hora" readonly required>
               </div>
               <div class="col-6">
                 <label for="trans" class="form-label">Empresa de Transporte</label>
@@ -1383,7 +1173,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-
+    <!-- Modal para mostrar la gráfica -->
     <div class="modal fade" id="graphicModal" tabindex="-1" aria-labelledby="graphicModal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -1393,7 +1183,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-
+    <!-- Toast de mensajes informativos sobre el estado de los procesos -->
     <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3">
       <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
         <div :class="`d-flex ${msgColor}`">
@@ -1404,7 +1194,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-
+    <!-- Tabla de movimientos -->
     <table class="table table-hover table-fixed">
       <thead>
         <tr>
@@ -1414,9 +1204,21 @@ onMounted(() => {
           <th scope="col" class="d-none d-xxl-table-cell pc w-25">Peso</th>
         </tr>
       </thead>
-      <div class="mt-3" :hidden=!spac><br><br><br><br><br><br><br><br><br><br><br></div>
-      <tbody id="table-content" :hidden=spac></tbody>
+      <tbody>
+        <tr v-for="data in showArray" :key="data.id">
+          <td hidden>{{ data.id }}</td>
+          <td class="text-center w-25">{{ getDateInfo(data.fecha) }}</td>
+          <td class="text-center w-25">{{ data.hora }}</td>
+          <td :class="data.typeCP < 0 ? 'bg-danger-subtle text-center w-25' : 'bg-success-subtle text-center w-25'" @click="() => {id = data.id}">
+            {{ data.rCP }} {{ data.selectedCP }}
+            <i class="bi bi-trash float-end me-3" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i>
+            <i class="bi bi-pencil float-end me-4" @click="getItemEdit(data.id)" data-bs-toggle="modal" data-bs-target="#editItemModal" style="cursor: pointer;"></i>
+            <i class="bi bi-eye float-end me-4" @click="getItemEdit(data.id)" data-bs-toggle="modal" data-bs-target="#infoItemModal" style="cursor: pointer"></i>
+          </td>
+        </tr>
+      </tbody>
     </table>
+    <!-- Tabla de todos los movimientos para PDF -->
     <table id="pdftable-content" hidden>
       <thead>
         <tr>
@@ -1425,27 +1227,34 @@ onMounted(() => {
           <th>Peso</th>
         </tr>
       </thead>
-      <tbody id="content"></tbody>
+      <tbody>
+        <tr v-for="(data, index) in showPdfArray" :key=index>
+          <td class="text-center w-25">{{ getDateInfo(data.fecha) }}</td>
+          <td class="text-center w-25">{{ data.hora }}</td>
+          <td class="text-center w-25">{{ data.rCP }} {{data.selectedCP}}</td>
+        </tr>
+      </tbody>
     </table>
-    <div class="d-flex justify-content-center" id="but">
-      <div class="btn-group" role="group" aria-label="Basic example">
+    <!-- Botones de atrás y siguiente -->
+    <div class="d-flex button-space justify-content-center align-items-end">
+      <div class="btn-group" role="group">
         <button type="button" class="btn btn-primary" @click="prev" :disabled="previousDisabled">Atrás</button>
         <button type="button" class="btn btn-primary" @click="next" :disabled="nextDisabled">Siguiente</button>
       </div>
     </div>
-    
+    <!-- Modal de confirmación para eliminar movimiento -->
     <div class="modal fade" id="confirmacion" data-bs-backdrop="static" tabindex="-1" aria-labelledby="confimacionLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h1 class="modal-title fs-5" id="confirmacionLabel">Confirmación</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click=confir(false)></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <p>Se eliminará el registro.</p>
             <div class="modal-footer">
-              <button v-if ="!adding" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(false)>Cancelar</button>
-              <button v-if ="!adding" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close" @click=confir(true)>Aceptar</button>
+              <button v-if ="!adding" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">Cancelar</button>
+              <button v-if ="!adding" type="button" @click="deleteItem(id)" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">Aceptar</button>
               <button v-else class="btn btn-primary" type="button" disabled>
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 Eliminando...
@@ -1543,11 +1352,6 @@ onMounted(() => {
   padding-left: 5.2rem !important;
 }
 
-.cw {
-  display: inline;
-  width: auto;
-}
-
 .cuadrado-g {
   width: 50px;
   height: 50px;
@@ -1562,5 +1366,12 @@ onMounted(() => {
 
 .ts {
   transform: translateY(40%);
+}
+
+.button-space {
+  position: absolute;
+  top: clamp(535px ,77vh, 700px);
+  left: 50%;
+  margin-left: -77.32px;
 }
 </style>

@@ -5,6 +5,7 @@ import { doc, deleteDoc, getDocs, query, orderBy, where, collection, addDoc } fr
 import { useUserStore } from '../stores/user';
 import { useMix } from '../composables/mix';
 import { Toast } from 'bootstrap';
+import router from '../router';
 import VueMultiselect from 'vue-multiselect';
 import  jsPDF  from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -91,6 +92,14 @@ const getItems = async () => {
       };
       i.addEventListener("click", waitConf);
     });
+
+    const eyeIcon = document.querySelectorAll('.bi-eye');
+    eyeIcon.forEach(i => {
+      const data =  i.parentElement.previousElementSibling;
+      i.addEventListener('click', () => {
+        router.push(`/app/${data.innerHTML.toLowerCase().replace(/\s+/g, '')}`)
+      })
+    })
   } catch (e) {
     console.log(e.message);
   }
@@ -137,9 +146,10 @@ const showData = (table, data, id) => {
                       <tr>
                         <td hidden>${id}</td>
                         <td>${data.desecho}</td>
-                        <td>${Number.isInteger(data.cp) ? data.cp: parseFloat(data.cp.toFixed(4))} kg <i data-bs-toggle="modal" data-bs-target="#confirmacion" class="bi bi-trash ms-4 me-4 float-end" style="cursor: pointer;"></i> <a href="/app/${data.desecho.toLowerCase().replace(/\s+/g, '')}" class="text-dark"><i class="bi bi-eye float-end" style="cursor: pointer"></i></a></td>
+                        <td>${Number.isInteger(data.cp) ? data.cp: parseFloat(data.cp.toFixed(4))} kg <i data-bs-toggle="modal" data-bs-target="#confirmacion" class="bi bi-trash ms-4 me-4 float-end" style="cursor: pointer;"></i><i class="bi bi-eye float-end" style="cursor: pointer"></i></td>
                       </tr>
                     `;
+
 };
 
 const showTotalSum = element => {

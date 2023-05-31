@@ -28,6 +28,6 @@ const sessionPersistence = async () => {
   }
 };
 
-sessionPersistence();
+await sessionPersistence();
 
 export { auth, db, storage };

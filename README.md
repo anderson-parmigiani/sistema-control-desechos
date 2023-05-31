@@ -1,3 +1,3 @@
-## Sistema para el Control de la disposición de materiales de desecho electrónico
+### Sistema para el Control de la disposición de materiales de desecho electrónico.
 
-Sistema de información bajo plataforma web para el control de la disposición de materiales de desecho electrónico, capaz de llevar un registro de los mismos, su tipo de material y la cantidad, volumen o peso de los que pueda llegar a poseer una empresa, tratamiento adecuado, encargados del manejo y transporte, y vigencia o no de los permisos asociados las empresas involucradas.
+<span style="margin-left: 40px;"><span>Sistema de información bajo plataforma web para el control de la disposición de materiales de desecho electrónico, capaz de llevar un registro de los movimientos de entrada y salida, el tipo de desecho y su peso, información de las empresas encargadas del transporte y tratamiento, y vigencia o no de los permisos asociados a las empresas involucradas, genera reportes en PDF y gráficos en base a la información solicitada.

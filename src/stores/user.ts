@@ -37,7 +37,7 @@ export const useUserStore = defineStore('userStore', () => {
 
       if(auth.currentUser.emailVerified){
         userData.value = {name: user.displayName, email: user.email, photo: user.photoURL, uid: user.uid};
-        router.push("/");
+        router.push("/app");
       } else {
         await signOut(auth);
         return 'Debes verificar tu correo.';
