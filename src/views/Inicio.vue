@@ -146,7 +146,7 @@ const showData = (table, data, id) => {
                       <tr>
                         <td hidden>${id}</td>
                         <td>${data.desecho}</td>
-                        <td>${Number.isInteger(data.cp) ? data.cp: parseFloat(data.cp.toFixed(4))} kg <i data-bs-toggle="modal" data-bs-target="#confirmacion" class="bi bi-trash ms-4 me-4 float-end" style="cursor: pointer;"></i><i class="bi bi-eye float-end" style="cursor: pointer"></i></td>
+                        <td>${Number.isInteger(data.cp) ? data.cp: parseFloat(data.cp.toFixed(4))} kg <i data-bs-toggle="modal" data-bs-target="#confirmacion" class="bi bi-trash ms-2 me-3 ms-sm-4 me-sm-4 float-end" style="cursor: pointer;"></i><i class="bi bi-eye float-end" style="cursor: pointer"></i></td>
                       </tr>
                     `;
 
@@ -159,11 +159,10 @@ const showTotalSum = element => {
 
   Number.isInteger(sumTotal.value) ? sumTotal.value: sumTotal.value = parseFloat(sumTotal.value.toFixed(4));
   element.innerHTML +=`
-                        <div class="bg-light d-flex align-items-center fw-bold mt-5 w-100">
+                        <div class="bg-light d-flex align-items-center justify-content-between fw-bold mt-5 w-100">
                           <p class="mb-0">Peso Total</p>
-                          <p class="d-none d-xxl-block mc mb-0">${sumTotal.value} kg</p>
-                          <p class="d-none d-xl-block d-xxl-none mcm mb-0">${sumTotal.value} kg</p>
-                          <p class="d-block d-xl-none mcs mb-0">${sumTotal.value} kg</p>
+                          <p class="mb-0">${sumTotal.value} kg</p>
+                          <p></p>
                         </div>
                       `;
 };
@@ -268,8 +267,8 @@ onMounted(() => {
     </div>
 
     <div class="row">
-      <div class="col-3"></div>
-      <div class="col-6">
+      <div class="col-0 col-sm-1 col-xl-2 col-xxl-3"></div>
+      <div class="col-12 col-sm-10 col-xl-8 col-xxl-6">
         <div class="lead text-center fw-bold mb-5">Consolidado de Desechos</div>
         <table class="table table-hover table-borderless table-light" id="tab">
           <thead>
@@ -282,7 +281,7 @@ onMounted(() => {
         </table>
         <div class="sum"></div>
       </div>
-      <div class="col-3"></div>
+      <div class="col-0 col-sm-1 col-xl-2 col-xxl-3"></div>
     </div>
 
     <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3">
@@ -299,78 +298,3 @@ onMounted(() => {
 </template>
 
 <style src="vue-multiselect/dist/vue-multiselect.css"></style>
-<style>
-.multiselect__placeholder {
-  display: inline-block !important;
-  margin-bottom: 0px !important;
-  padding-top: 0px !important;
-}
-
-.multiselect.invalid .multiselect__tags {
-  border: 1px solid #f86c6b !important;
-}
-
-.multiselect__option--highlight {
-  background: #428bca !important;
-}
-
-.multiselect__option--highlight:after {
-  background: #428bca !important;
-}
-
-.multiselect__tags {
-  border: 1px solid #ced4da !important;
-}
-
-.multiselect__placeholder{
-  margin-left: 10px;
-  margin-top: 2px;
-}
-
-.multiselect__tag {
-  background: #f0f0f0 !important;
-  border: 1px solid rgba(60, 60, 60, 0.26) !important;
-  color: black !important;
-  margin-bottom: 0px !important;
-  margin-right: 5px !important;
-}
-
-.multiselect__tag-icon:after {
-  color: rgba(60, 60, 60, 0.5) !important;
-}
-
-.multiselect__tag-icon:focus,
-.multiselect__tag-icon:hover {
-  background: #f0f0f0 !important;
-}
-
-.multiselect__tag-icon:focus:after,
-.multiselect__tag-icon:hover:after {
-  color: red !important;
-}
-
-.multiselect__select:before {
-    color: black !important;
-    border-top-color: black !important;
-}
-
-.invalid .multiselect__tags {
-  border-color: #f04124!important;
-}
-
-.valid .multiselect__tags {
-  border-color: #198754!important;
-}
-
-.mc {
-  margin-left: 15.5rem;
-}
-
-.mcm {
-  margin-left: 12.8rem;
-}
-
-.mcs {
-  margin-left: 9.8rem;
-}
-</style>

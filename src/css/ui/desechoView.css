@@ -1,0 +1,113 @@
+.multiselect__placeholder {
+    display: inline-block !important;
+    margin-bottom: 0px !important;
+    padding-top: 0px !important;
+}
+
+.multiselect.invalid .multiselect__tags {
+    border: 1px solid #f86c6b !important;
+}
+
+.multiselect__option--highlight {
+    background: #428bca !important;
+}
+
+.multiselect__option--highlight:after {
+    background: #428bca !important;
+}
+
+.multiselect__tags {
+    border: 1px solid #ced4da !important;
+}
+
+.multiselect__placeholder{
+    margin-left: 1px;
+    margin-top: 2px;
+}
+
+.multiselect__tag {
+    background: #f0f0f0 !important;
+    border: 1px solid rgba(60, 60, 60, 0.26) !important;
+    color: black !important;
+    margin-bottom: 0px !important;
+    margin-right: 5px !important;
+}
+
+.multiselect__tag-icon:after {
+    color: rgba(60, 60, 60, 0.5) !important;
+}
+
+.multiselect__tag-icon:focus,
+.multiselect__tag-icon:hover {
+    background: #f0f0f0 !important;
+}
+
+.multiselect__tag-icon:focus:after,
+.multiselect__tag-icon:hover:after {
+    color: red !important;
+}
+
+.multiselect__select:before {
+    color: black !important;
+    border-top-color: black !important;
+    right: -35% !important;
+}
+
+.invalid .multiselect__tags {
+    border-color: #f04124!important;
+}
+
+.valid .multiselect__tags {
+    border-color: #198754!important;
+}
+
+.ss {
+    display: inline-block;
+    margin-left: 3rem;
+    margin-right: 2.5rem;
+    transform: translateY(27%);
+}
+
+.sc {
+    display: inline-block;
+    transform: translateY(20%);
+}
+
+.pc {
+    padding-left: 9rem !important;
+}
+
+.ps {
+    padding-left: 5.2rem !important;
+}
+
+.tah {
+    min-height: 700px;
+}
+
+.cuadrado-g {
+    width: 30px;
+    height: 30px;
+    background-color: #d1e7dd;
+    @media (min-width: 576px) {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+.cuadrado-r {
+    width: 30px;
+    height: 30px;
+    background-color: #f8d7da;
+    @media (min-width: 576px) {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+.button-space {
+    position: absolute;
+    top: clamp(535px ,77vh, 700px);
+    left: 50%;
+    margin-left: -77.32px;
+}

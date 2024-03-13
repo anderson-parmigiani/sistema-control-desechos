@@ -12,6 +12,7 @@ const checked = ref();
 const validate = ref('needs-validation');
 const local = localStorage.getItem('email');
 
+
 const submitData = async () => {
     try {
         if(!document.querySelector('form').checkValidity()) throw new Error('Complete los campos correctamente.');
@@ -37,13 +38,13 @@ const remember = () => {
 <template>
     <div class="container">
         <div class="row">
-            <div class="col"></div>
+            <div class="col d-none d-sm-block"></div>
             <div class="col">
                 <img src="../assets/green.svg" alt="Logo" width="300" height="240" class="mt-5 mx-auto d-none d-xxl-block">
                 <img src="../assets/green.svg" alt="Logo" width="250" height="140" class="mt-3 mx-auto d-none d-xl-block d-xxl-none">
                 <img src="../assets/green.svg" alt="Logo" width="250" height="127" class="mt-2 mx-auto d-block d-xl-none">
 
-                <form @submit.prevent="submitData" novalidate>
+                <form class="mt-5" @submit.prevent="submitData" novalidate>
                     <div :class="`mb-3 ${validate}`">
                         <input type="email" class="form-control mt-3 mt-xl-4 mt-xxl-5" placeholder="Email" v-model.trim="email" required>
                     </div>
@@ -64,7 +65,7 @@ const remember = () => {
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary mb-3 mb-sm-4 mt-1 mt-xl-3" :disabled="userStore.loadingUser">Entrar</button>
                     </div>
-                    <div class="text-center d-none d-sm-none d-md-block">
+                    <div class="text-center">
                         <p>¿No eres un usuario? <RouterLink to="/registro">Regístrate</RouterLink></p>
                     </div>
                 </form>

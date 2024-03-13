@@ -208,15 +208,15 @@ onMounted(() => {
   <div class="container-xxl">
     <div class="row mt-4 mt-xxl-5">
       <!-- tabla de empresas tratantes registradas -->
-      <div class="col-6">
-        <div class="overflow-scroll" style="height: 66vh;">
+      <div class="col-12 col-xl-6">
+        <div class="mx-auto overflow-scroll thc">
           <table class="table caption-top table-bordered">
-            <caption class="ms-5 ps-5">
+            <caption class="ms-sm-5 ps-md-5">
               Empresas Tratantes
               <button class="btn btn-primary float-end me-2" type="button" @click="prepare('Empresa Tratante')" data-bs-toggle="modal" data-bs-target="#modalRegistro">
                 Añadir
               </button>
-              <div class="col-4 float-end me-5">
+              <div class="col-5 float-sm-end me-sm-3 me-md-5 mt-3 mt-sm-0">
                 <input type="text" class="form-control" placeholder="Buscar nombre" id="searchTrat" v-model="tratName" @keyup.enter="searchTrt('empTrat')">
               </div>
             </caption>
@@ -224,18 +224,19 @@ onMounted(() => {
               <tr>
                 <th scope="col">Rif</th>
                 <th scope="col">Nombre</th>
-                <th scope="col">Vencimiento del Racda</th>
+                <th scope="col">V. Racda</th>
               </tr>
             </thead>
             <tbody id="empTrat" class="table-group-divider">
               <tr v-for="emp in dTrat" :key="emp.id">
-                <td>J-{{emp.rif}}</td>
-                <td>{{emp.name}}</td>
-                <td :class="new Date(emp.venc).getTime() < Date.now() ? 'bg-danger-subtle' : 'bg-success-subtle'" @click="() => {id = emp.id; currType = 'empTrat'}">
+                <td class="px-0 px-sm-2 d-none d-sm-block">J-{{emp.rif}}</td>
+                <td class="px-0 px-sm-2 d-sm-none">{{emp.rif}}</td>
+                <td class="px-0 px-sm-2">{{emp.name}}</td>
+                <td :class="new Date(emp.venc).getTime() < Date.now() ? 'bg-danger-subtle px-0 px-sm-2' : 'bg-success-subtle px-0 px-sm-2'" @click="() => {id = emp.id; currType = 'empTrat'}">
                   {{ getDateInfo(emp.venc) }}
-                  <i class="bi bi-trash float-end" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i>
-                  <i class="bi bi-pencil float-end me-3" @click="getItemEdit(emp.id, 'empTrat')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editModal"></i>
-                  <i class="bi bi-eye float-end me-3" @click="getItemEdit(emp.id, 'empTrat')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#infoModal"></i>
+                    <i class="bi bi-trash float-end" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i>
+                    <i class="bi bi-pencil float-end me-1 me-sm-2 me-md-3" @click="getItemEdit(emp.id, 'empTrat')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editModal"></i>
+                    <i class="bi bi-eye float-end me-1 me-sm-2 me-md-3" @click="getItemEdit(emp.id, 'empTrat')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#infoModal"></i>
                 </td>
               </tr>
             </tbody>
@@ -243,15 +244,15 @@ onMounted(() => {
         </div>
       </div>
       <!-- tabla de empresas de transporte registradas -->
-      <div class="col-6">
-        <div class="overflow-scroll" style="height: 66vh;">
+      <div class="col-12 col-xl-6">
+        <div class="mx-auto overflow-scroll thc">
           <table class="table caption-top table-bordered">
-            <caption class="ms-5 ps-5">
+            <caption class="ms-sm-5 ps-md-5">
                 Empresas de Transporte
                 <button class="btn btn-primary float-end me-2" type="button" @click="prepare('Empresa de Transporte')" data-bs-toggle="modal" data-bs-target="#modalRegistro">
                     Añadir
                 </button>
-                <div class="col-4 float-end me-5">
+                <div class="col-5 float-sm-end me-sm-3 me-md-5 mt-3 mt-sm-0">
                   <input type="text" class="form-control" placeholder="Buscar nombre" id="searchTrans" v-model="transName" @keyup.enter="searchTrt('empTrans')">
                 </div>
             </caption>
@@ -259,31 +260,32 @@ onMounted(() => {
                 <tr>
                   <th scope="col">Rif</th>
                   <th scope="col">Nombre</th>
-                  <th scope="col">Vencimiento del Racda</th>
+                  <th scope="col">V. Racda</th>
                 </tr>
             </thead>
             <tbody id="empTrans" class="table-group-divider">
               <tr v-for="emp in dTrans" :key="emp.id">
-                <td>J-{{ emp.rif }}</td>
-                <td>{{ emp.name }}</td>
-                <td :class="new Date(emp.venc).getTime() < Date.now() ? 'bg-danger-subtle' : 'bg-success-subtle'" @click="() => {id = emp.id; currType = 'empTrans'}">
+                <td class="px-0 px-sm-2 d-none d-sm-block">J-{{ emp.rif }}</td>
+                <td class="px-0 px-sm-2 d-sm-none">{{ emp.rif }}</td>
+                <td class="px-0 px-sm-2">{{ emp.name }}</td>
+                <td :class="new Date(emp.venc).getTime() < Date.now() ? 'bg-danger-subtle px-0 px-sm-2' : 'bg-success-subtle px-0 px-sm-2'" @click="() => {id = emp.id; currType = 'empTrans'}">
                   {{ getDateInfo(emp.venc) }}
                   <i class="bi bi-trash float-end" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i>
-                  <i class="bi bi-pencil float-end me-3" @click="getItemEdit(emp.id, 'empTrans')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editModal"></i>
-                  <i class="bi bi-eye float-end me-3" @click="getItemEdit(emp.id, 'empTrans')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#infoModal"></i>
+                  <i class="bi bi-pencil float-end me-1 me-sm-2 me-md-3" @click="getItemEdit(emp.id, 'empTrans')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editModal"></i>
+                  <i class="bi bi-eye float-end me-1 me-sm-2 me-md-3" @click="getItemEdit(emp.id, 'empTrans')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#infoModal"></i>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-      <!-- nomenclatura sobre el color del racda -->
-      <div class="d-flex justify-content-center mt-3 mb-2">
-        <div class="cuadrado-g rounded-circle"></div>
-        <div class="ms-1 pt-1 mt-2">Racda vigente</div>
-        <div class="cuadrado-r ms-5 rounded-circle"></div>
-        <div class="ms-1 pt-1 mt-2">Racda vencido</div>
-      </div>
+    </div>
+    <!-- nomenclatura sobre el color del racda -->
+    <div class="d-flex justify-content-center mt-3 mb-2">
+      <div class="cuadrado-g rounded-circle"></div>
+      <div class="ms-1 pt-1 mt-2">Racda vigente</div>
+      <div class="cuadrado-r ms-5 rounded-circle"></div>
+      <div class="ms-1 pt-1 mt-2">Racda vencido</div>
     </div>
     <!-- modal de registro de empresa -->
     <div class="modal fade" id="modalRegistro" tabindex="-1" aria-labelledby="modalRegistroLabel" aria-hidden="true">
@@ -449,24 +451,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
-<style>
-thead {
-  background: white;
-  position: sticky;
-  top: -1px;
-  z-index: 999;
-}
-
-.cuadrado-g {
-  width: 50px;
-  height: 50px;
-  background-color: #d1e7dd;
-}
-
-.cuadrado-r {
-  width: 50px;
-  height: 50px;
-  background-color: #f8d7da;
-}
-</style>

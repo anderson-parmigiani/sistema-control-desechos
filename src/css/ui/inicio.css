@@ -1,0 +1,61 @@
+.multiselect__placeholder {
+    display: inline-block !important;
+    margin-bottom: 0px !important;
+    padding-top: 0px !important;
+}
+
+.multiselect.invalid .multiselect__tags {
+    border: 1px solid #f86c6b !important;
+}
+
+.multiselect__option--highlight {
+    background: #428bca !important;
+}
+
+.multiselect__option--highlight:after {
+    background: #428bca !important;
+}
+
+.multiselect__tags {
+    border: 1px solid #ced4da !important;   
+}
+
+.multiselect__placeholder{
+    margin-left: 10px;
+    margin-top: 2px;
+}
+
+.multiselect__tag {
+    background: #f0f0f0 !important;
+    border: 1px solid rgba(60, 60, 60, 0.26) !important;
+    color: black !important;
+    margin-bottom: 0px !important;
+    margin-right: 5px !important;
+}
+
+.multiselect__tag-icon:after {
+    color: rgba(60, 60, 60, 0.5) !important;
+}
+
+.multiselect__tag-icon:focus,
+.multiselect__tag-icon:hover {
+    background: #f0f0f0 !important;
+}
+
+.multiselect__tag-icon:focus:after,
+.multiselect__tag-icon:hover:after {
+    color: red !important;
+}
+
+.multiselect__select:before {
+    color: black !important;
+    border-top-color: black !important;
+}
+
+.invalid .multiselect__tags {
+    border-color: #f04124!important;
+}
+
+.valid .multiselect__tags {
+    border-color: #198754!important;
+}

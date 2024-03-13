@@ -33,16 +33,16 @@ const changePassword = async () => {
         <div class="row">
             <div class="col d-none d-sm-block"></div>
             <div class="col">
-                <img v-if="userStore.userData" :src="`${userStore.userData.photo}`" alt="Logo" width="300" height="235" class="mt-5 mx-auto d-none d-xxl-block rounded-circle">
-                <img v-else src="../assets/green.svg" alt="Logo" width="300" height="235" class="mt-5 mx-auto d-none d-xxl-block mx-auto">
+                <img v-if="userStore.userData" :src="`${userStore.userData.photo}`" alt="Logo" width="300" height="240" class="mt-5 mx-auto d-none d-xxl-block rounded-circle">
+                <img v-else src="../assets/green.svg" alt="Logo" width="300" height="240" class="mt-5 mx-auto d-none d-xxl-block mx-auto">
 
-                <img v-if="userStore.userData" :src="`${userStore.userData.photo}`" alt="Logo" width="200" height="140" class="mt-3 mx-auto d-none d-xl-block d-xxl-none rounded-circle">
-                <img v-else src="../assets/green.svg" alt="Logo" width="200" height="140" class="mt-3 mx-auto d-none d-xl-block d-xxl-none mx-auto">
+                <img v-if="userStore.userData" :src="`${userStore.userData.photo}`" alt="Logo" width="250" height="140" class="mt-3 mx-auto d-none d-xl-block d-xxl-none rounded-circle">
+                <img v-else src="../assets/green.svg" alt="Logo" width="250" height="140" class="mt-3 mx-auto d-none d-xl-block d-xxl-none mx-auto">
 
-                <img v-if="userStore.userData" :src="`${userStore.userData.photo}`" alt="Logo" width="200" height="130" class="mt-2 mx-auto d-block d-xl-none rounded-circle">
-                <img v-else src="../assets/green.svg" alt="Logo" width="200" height="130" class="mt-2 mx-auto d-block d-xl-none mx-auto">
+                <img v-if="userStore.userData" :src="`${userStore.userData.photo}`" alt="Logo" width="250" height="127" class="mt-2 mx-auto d-block d-xl-none rounded-circle">
+                <img v-else src="../assets/green.svg" alt="Logo" width="250" height="127" class="mt-2 mx-auto d-block d-xl-none mx-auto">
 
-                <form :class="`${validate}`" @submit.prevent="changePassword" novalidate>
+                <form :class="`${validate} mt-5`" @submit.prevent="changePassword" novalidate>
                     <div class="mb-4">
                         <input type="email" class="form-control mt-3 mt-xl-4 mt-xxl-5" placeholder="Email" v-model.trim="email" required>
                     </div>

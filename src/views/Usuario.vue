@@ -88,8 +88,8 @@ const associateRacda = async () => {
 <template>
     <div class="container">
         <div class="row">
-            <div class="col d-none d-sm-block"></div>
-            <div class="col">
+            <div class="col-1 col-sm-2 col-lg-3 col-xxl-4"></div>
+            <div class="col-10 col-sm-8 col-lg-6 col-xxl-4">
                 <form enctype="multipart/form-data" class="d-grid" @submit.prevent>
                     <label for="inputImg"><img :src= userStore.userData?.photo id="userImg" alt="Logo" width="300" height="235" style="cursor: pointer" class="mt-5 mx-auto d-none d-xxl-block rounded-circle"></label>
                     <label for="inputImg"><img :src= userStore.userData?.photo id="userImg" alt="Logo" width="200" height="140" style="cursor: pointer" class="mt-3 mx-auto d-none d-xl-block d-xxl-none rounded-circle"></label>
@@ -117,7 +117,7 @@ const associateRacda = async () => {
                     <div :class="`alert ${res == 'Informacion actualizada.' ? 'alert-success' : 'alert-danger'} mt-4 text-center`" role="alert" v-if="res">{{ res }}</div>
                 </form>
             </div>
-            <div class="col d-none d-sm-block"></div>
+            <div class="col-1 col-sm-2 col-lg-3 col-xxl-4"></div>
         </div>
     </div>
 </template>

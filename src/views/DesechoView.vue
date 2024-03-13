@@ -861,36 +861,24 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="container">
+  <div class="container-sm-fluid container-lg d-flex flex-column tah">
     <!-- Sección superior -->
-    <div class="d-inline-block d-xxl-none">
-      <RouterLink class="btn btn-primary mt-1 mt-xxl-4" to="/"><i class="bi bi-arrow-left" style="font-size: 20px;"></i></RouterLink>
-    </div>
-    <div class="d-none d-xxl-flex">
-      <RouterLink class="btn btn-primary mt-3 mt-xxl-4" to="/"><i class="bi bi-arrow-left" style="font-size: 20px;"></i></RouterLink>
-      <div class="d-xxl-flex ms-auto mt-auto d-none">
+    <div class="d-flex align-items-center">
+      <RouterLink class="btn btn-primary" to="/"><i class="bi bi-arrow-left" style="font-size: 20px;"></i></RouterLink>
+      <div class="d-flex ms-auto align-items-center">
         <div class="cuadrado-g rounded-circle"></div>
-        <div class="ms-1 pt-1 mt-2">Entrada</div>
-        <div class="cuadrado-r ms-5 rounded-circle"></div>
-        <div class="ms-1 pt-1 mt-2">Salida</div>
+        <div class="ms-1">Entrada</div>
+        <div class="cuadrado-r ms-2 ms-sm-5 rounded-circle"></div>
+        <div class="ms-1">Salida</div>
       </div>
-      <button v-if="userStore.wait == 1" class="btn btn-primary ms-auto mt-3 mt-xxl-4" type="button" data-bs-toggle="modal" data-bs-target="#newItemModal" @click="refresh"><i class="bi bi-plus-lg" style="font-size: 20px;"></i></button>
-      <p v-if="userStore.wait == 2" class="text-danger ms-auto mt-3 mt-xxl-4">Renueve el Racda</p>
-      <p v-if="userStore.wait == 3" class="text-warning ms-auto mt-3 mt-xxl-4">Ingrese el Racda</p>
+      <button v-if="userStore.wait == 1" class="btn btn-primary my-auto ms-auto" type="button" data-bs-toggle="modal" data-bs-target="#newItemModal" @click="refresh"><i class="bi bi-plus-lg" style="font-size: 20px;"></i></button>
+      <p v-if="userStore.wait == 2" class="text-danger my-auto ms-auto">Renueve el Racda</p>
+      <p v-if="userStore.wait == 3" class="text-warning my-auto ms-auto">Ingrese el Racda</p>
     </div>
-    <p class="text-center mt-4 mb-1 lead d-none d-xxl-block">{{nombreDesecho?.desecho}}</p>
-    <p class="text-center lead mb-4 d-none d-xxl-block">Peso Total: <span v-if="!hideCP">{{Number.isInteger(sum) ? sum : parseFloat(sum.toFixed(4))}} kg</span><span v-else>0 kg</span></p>
-    <p class="ss mt-1 lead d-xxl-none">{{nombreDesecho?.desecho}}</p>
-    <p class="sc lead mb-4 pb-3 d-xxl-none">Peso Total: <span v-if="!hideCP">{{Number.isInteger(sum) ? sum : parseFloat(sum.toFixed(4))}} kg</span><span v-else>0 kg</span></p>
-    <div class="d-inline-flex d-xxl-none ps-5 ms-5">
-      <div class="cuadrado-g ts rounded-circle"></div>
-      <div class="ms-1 pt-3 mt-3">Entrada</div>
-      <div class="cuadrado-r ts ms-5 rounded-circle"></div>
-      <div class="ms-1 pt-3 mt-3">Salida</div>
-    </div>
-    <button v-if="userStore.wait == 1" class="btn btn-primary d-xxl-none float-end" style="margin-top: 1.6rem" type="button" data-bs-toggle="modal" data-bs-target="#newItemModal" @click="refresh"><i class="bi bi-plus-lg" style="font-size: 20px;"></i></button>
-    <div class="d-flex float-start">
-      <div class="col-3 me-xl-5 me-3 ps-xxl-5 pe-5 pe-xl-4" style="margin-left: 5.2rem!important">
+    <p class="text-center mt-4 mb-1 lead">{{nombreDesecho?.desecho}}</p>
+    <p class="text-center lead mb-4">Peso Total: <span v-if="!hideCP">{{Number.isInteger(sum) ? sum : parseFloat(sum.toFixed(4))}} kg</span><span v-else>0 kg</span></p>
+    <div class="d-flex flex-column flex-sm-row justify-content-center mb-4">
+      <div class="col-sm-2 col-md-3 me-xl-5 me-sm-2 ps-xxl-5 pe-lg-5 pe-xl-4 mb-3 mb-sm-0">
         <VueMultiselect
                     v-model="tipMov"
                     :options="MOV_OPTIONS"
@@ -901,13 +889,13 @@ onMounted(() => {
                     @select="initial"
         />
       </div>
-      <div class="d-flex mb-0 mb-xxl-4 col-9">
-        <label for="startDate" class="ms-2 ms-xl-3 ms-xxl-4 ps-xxl-1 form-label lead">Desde:</label>
-        <input type="date" class="ms-1 me-3 form-control" id="startDate" v-model="sDate" @change="initial">
-        <label for="endDate" class="form-label lead">Hasta:</label>
+      <div class="d-flex mb-0 mb-xxl-4 col-12 col-sm-10 col-md-9">
+        <!-- <label for="startDate" class="ms-2 ms-xl-3 ms-xxl-4 ps-xxl-1 form-label lead">Desde:</label> -->
+        <input type="date" class=" me-1 form-control" id="startDate" v-model="sDate" @change="initial">
+        <label for="endDate" class="form-label lead">-</label>
         <input type="date" class="ms-1 form-control" id="endDate" v-model="eDate" @change="initial">
-        <button class="btn btn-primary ms-4 ms-xxl-5" @click="generatePDF" type="button"><i class="bi bi-printer"></i></button>
-        <button class="btn btn-primary ms-4 ms-xxl-3" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button>
+        <button class="btn btn-primary ms-2 ms-xxl-5" @click="generatePDF" type="button"><i class="bi bi-printer"></i></button>
+        <button class="btn btn-primary ms-2 ms-xxl-3" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button>
       </div>
     </div>
     <!-- Modal para registrar movimiento -->
@@ -1209,11 +1197,11 @@ onMounted(() => {
           <td hidden>{{ data.id }}</td>
           <td class="text-center w-25">{{ getDateInfo(data.fecha) }}</td>
           <td class="text-center w-25">{{ data.hora }}</td>
-          <td :class="data.typeCP < 0 ? 'bg-danger-subtle text-center w-25' : 'bg-success-subtle text-center w-25'" @click="() => {id = data.id}">
+          <td :class="data.typeCP < 0 ? 'bg-danger-subtle text-center w-25 px-0' : 'bg-success-subtle text-center w-25 px-0'" @click="() => {id = data.id}">
             {{ data.rCP }} {{ data.selectedCP }}
-            <i class="bi bi-trash float-end me-3" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i>
-            <i class="bi bi-pencil float-end me-4" @click="getItemEdit(data.id)" data-bs-toggle="modal" data-bs-target="#editItemModal" style="cursor: pointer;"></i>
-            <i class="bi bi-eye float-end me-4" @click="getItemEdit(data.id)" data-bs-toggle="modal" data-bs-target="#infoItemModal" style="cursor: pointer"></i>
+            <i class="bi bi-trash float-end me-1 me-sm-2 me-md-3" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i>
+            <i class="bi bi-pencil float-end me-1 me-sm-3 me-md-4" @click="getItemEdit(data.id)" data-bs-toggle="modal" data-bs-target="#editItemModal" style="cursor: pointer;"></i>
+            <i class="bi bi-eye float-end me-1 me-sm-3 me-md-4" @click="getItemEdit(data.id)" data-bs-toggle="modal" data-bs-target="#infoItemModal" style="cursor: pointer"></i>
           </td>
         </tr>
       </tbody>
@@ -1236,7 +1224,7 @@ onMounted(() => {
       </tbody>
     </table>
     <!-- Botones de atrás y siguiente -->
-    <div class="d-flex button-space justify-content-center align-items-end">
+    <div class="d-flex justify-content-center mt-auto">
       <div class="btn-group" role="group">
         <button type="button" class="btn btn-primary" @click="prev" :disabled="previousDisabled">Atrás</button>
         <button type="button" class="btn btn-primary" @click="next" :disabled="nextDisabled">Siguiente</button>
@@ -1268,110 +1256,3 @@ onMounted(() => {
 </template>
 
 <style src="vue-multiselect/dist/vue-multiselect.css"></style>
-<style>
-.multiselect__placeholder {
-  display: inline-block !important;
-  margin-bottom: 0px !important;
-  padding-top: 0px !important;
-}
-
-.multiselect.invalid .multiselect__tags {
-  border: 1px solid #f86c6b !important;
-}
-
-.multiselect__option--highlight {
-  background: #428bca !important;
-}
-
-.multiselect__option--highlight:after {
-  background: #428bca !important;
-}
-
-.multiselect__tags {
-  border: 1px solid #ced4da !important;
-}
-
-.multiselect__placeholder{
-  margin-left: 1px;
-  margin-top: 2px;
-}
-
-.multiselect__tag {
-  background: #f0f0f0 !important;
-  border: 1px solid rgba(60, 60, 60, 0.26) !important;
-  color: black !important;
-  margin-bottom: 0px !important;
-  margin-right: 5px !important;
-}
-
-.multiselect__tag-icon:after {
-  color: rgba(60, 60, 60, 0.5) !important;
-}
-
-.multiselect__tag-icon:focus,
-.multiselect__tag-icon:hover {
-  background: #f0f0f0 !important;
-}
-
-.multiselect__tag-icon:focus:after,
-.multiselect__tag-icon:hover:after {
-  color: red !important;
-}
-
-.multiselect__select:before {
-    color: black !important;
-    border-top-color: black !important;
-    right: -35% !important;
-}
-
-.invalid .multiselect__tags {
-  border-color: #f04124!important;
-}
-
-.valid .multiselect__tags {
-  border-color: #198754!important;
-}
-
-.ss {
-  display: inline-block;
-  margin-left: 3rem;
-  margin-right: 2.5rem;
-  transform: translateY(27%);
-}
-
-.sc {
-  display: inline-block;
-  transform: translateY(20%);
-}
-
-.pc {
-  padding-left: 9rem !important;
-}
-
-.ps {
-  padding-left: 5.2rem !important;
-}
-
-.cuadrado-g {
-  width: 50px;
-  height: 50px;
-  background-color: #d1e7dd;
-}
-
-.cuadrado-r {
-  width: 50px;
-  height: 50px;
-  background-color: #f8d7da;
-}
-
-.ts {
-  transform: translateY(40%);
-}
-
-.button-space {
-  position: absolute;
-  top: clamp(535px ,77vh, 700px);
-  left: 50%;
-  margin-left: -77.32px;
-}
-</style>
