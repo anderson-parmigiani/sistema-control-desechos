@@ -1,0 +1,27 @@
+@use './variables' as v;
+
+html {
+    font-size: 62.5%;
+    box-sizing: border-box;
+}
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+body {
+    font-family: v.$fuentePrincipal;
+    background-color: v.$blanco;
+    font-size: 1.6rem;
+}
+
+img {
+    width: 100%;
+    display: block;
+}
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.toast-body {
+    font-size: 1.4rem;
+}

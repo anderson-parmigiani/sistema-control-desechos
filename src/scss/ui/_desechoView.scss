@@ -1,0 +1,15 @@
+.view {
+    min-height: 595px;
+}
+
+.modal {
+
+    &__input-view {
+        width: 33.33%;
+        height: 40px;
+    }
+
+    &__input-des {
+        height: 43px;
+    }
+}

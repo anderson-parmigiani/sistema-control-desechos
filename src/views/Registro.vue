@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { useUserStore } from '../stores/user';
-import { ref } from 'vue';
+import {useUserStore} from '../stores/user';
+import {useMix} from '../composables/mix';
+import {ref} from 'vue';
 
 const userStore = useUserStore();
+const {res, timer} = useMix();
 
 const name = ref();
 const email = ref();
 const pass = ref();
-const res = ref();
 const validate = ref('needs-validation');
 
 const submitData = async () => {
@@ -18,41 +19,43 @@ const submitData = async () => {
             userStore.router.push("/autenticacion");
         }, 4000);
     } catch (e) {
-        res.value = 'Hubo un problema.';
-        console.log(e.message);
+        res.value = e.message;
     } finally {
         validate.value = 'was-validated';
+        timer(res, 5000);
     }
 };
 </script>
 
 <template>
-    <div class="container">
-        <div class="row">
-            <div class="col d-none d-sm-block"></div>
-            <div class="col">
-                <img src="../assets/green.svg" alt="Logo" width="300" height="240" class="mt-5 mx-auto d-none d-xxl-block">
-                <img src="../assets/green.svg" alt="Logo" width="250" height="140" class="mt-3 mx-auto d-none d-xl-block d-xxl-none">
-                <img src="../assets/green.svg" alt="Logo" width="250" height="127" class="mt-2 mx-auto d-block d-xl-none">
-                
+    <main class="authentication container my-auto">
 
-                <form :class="`${validate} mt-5`" @submit.prevent="submitData" novalidate>
-                    <div class="mb-3">
-                        <input type="text" class="form-control mt-3 mt-xl-4 mt-xxl-5" placeholder="Nombre de la empresa" v-model.trim="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <input type="email" class="form-control" placeholder="Email" v-model.trim="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <input type="password" class="form-control mb-4" placeholder="Contraseña" v-model.trim="pass" required>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary mt-3" :disabled="userStore.loadingUser">Registrarse</button>
-                    </div>
-                    <div :class="`alert ${res == 'Se ha enviado un correo de verificación.' ? 'alert-success' : 'alert-danger'} mt-4 text-center`" role="alert" v-if="res">{{ res }}</div>
-                </form>
-            </div>
-            <div class="col d-none d-sm-block"></div>
-        </div>
-    </div>
+        <form class="authentication__form mx-auto" @submit.prevent="submitData" novalidate>
+            <fieldset class="authentication__content d-flex flex-column justify-content-center align-items-center">
+                <legend class="authentication__legend text-center w-100">Registro</legend>
+
+                <div :class="`authentication__field d-flex align-items-center mb-5 w-100 ${validate}`">
+                    <label class="authentication__label me-3 me-sm-0" for="name">Nombre: </label>
+                    <input class="authentication__input form-control py-2" type="text" id="name" placeholder="Empresa C.A." v-model.trim="name" required>
+                </div>
+
+                <div :class="`authentication__field d-flex align-items-center mb-5 w-100 ${validate}`">
+                    <label class="authentication__label me-3 me-sm-0" for="email">Email: </label>
+                    <input class="authentication__input form-control py-2" type="email" id="email" placeholder="email@example.com" v-model.trim="email" required>
+                </div>
+
+                <div :class="`authentication__field d-flex align-items-center mb-5 w-100 ${validate}`">
+                    <label class="authentication__label me-3 me-sm-0" for="password">Contraseña: </label>
+                    <input class="authentication__input form-control py-2" type="password" id="password" placeholder="·················" v-model.trim="pass" required>
+                </div>
+
+                <div class="authentication__btn d-flex justify-content-end">
+                    <button class="authentication__submit authentication__submit--registro mb-3" type="submit" :disabled="userStore.loadingUser">Registrarse</button>
+                </div>
+            </fieldset>
+
+            <div :class="`authentication__alert alert ${res == 'Se ha enviado un correo de verificación.' ? 'alert-success' : 'alert-danger'} text-center mx-auto mt-2 mt-md-5`" role="alert" v-if="res">{{res}}</div>
+        </form>
+
+    </main>
 </template>

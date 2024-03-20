@@ -1,13 +1,14 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { useMix } from '../composables/mix';
-import { auth } from '../firebaseConfig';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
+import {defineStore} from 'pinia';
+import {ref} from 'vue';
+import {useMix} from '../composables/mix';
+import {auth} from '../firebaseConfig';
+import {createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, updateProfile} from 'firebase/auth';
 import router from '../router';
 
 export const useUserStore = defineStore('userStore', () => {
   const userData = ref(null);
   const loadingUser = ref(false);
+  const menuToggle = ref(false);
   const wait = ref(null);
   const DEFAULT_PHOTO = 'https://firebasestorage.googleapis.com/v0/b/sistema-control-desechos.appspot.com/o/images%2Fusers%2Fblue.png?alt=media&token=56acc29d-ff0a-4bc7-83cc-a6dde3556cf3';
 
@@ -83,8 +84,6 @@ export const useUserStore = defineStore('userStore', () => {
 
   const changePass = async email => {
     try {
-      loadingUser.value = true;
-
       await sendPasswordResetEmail(auth, email);
       return 'Se ha enviado un correo.';
     } catch (e) {
@@ -96,8 +95,6 @@ export const useUserStore = defineStore('userStore', () => {
 
       else
         return e.code;
-    } finally {
-      loadingUser.value = false;
     }
   };
 
@@ -124,6 +121,7 @@ export const useUserStore = defineStore('userStore', () => {
   const emailVerified = async () => auth.currentUser.emailVerified;
 
   return {
+    menuToggle,
     auth,
     router,
     userData,

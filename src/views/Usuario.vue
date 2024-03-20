@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useUserStore } from '../stores/user';
-import { useMix } from '../composables/mix';
-import { ref } from 'vue';
-import { db, storage } from '../firebaseConfig';
-import { ref as fileRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, setDoc } from "firebase/firestore"; 
+import {useUserStore} from '../stores/user';
+import {useMix} from '../composables/mix';
+import {ref} from 'vue';
+import {db, storage} from '../firebaseConfig';
+import {ref as fileRef, uploadBytes, getDownloadURL} from 'firebase/storage';
+import {doc, setDoc} from "firebase/firestore"; 
 
 const userStore = useUserStore();
-const { res, timer } = useMix();
+const {res, timer} = useMix();
 
 const image = ref(null);
 const email = ref(userStore.userData.email);
@@ -17,7 +17,7 @@ const validate = ref('needs-validation');
 
 const submitData = async () => {
     try {
-        if(!(document.getElementById('main') as HTMLSelectElement).checkValidity()) throw new Error('Complete los campos correctamente.');
+        if(!(document.querySelector('form')).checkValidity()) throw new Error('Complete los campos correctamente.');
         res.value = await userStore.updateName(name.value);
         await associateRacda();
     } catch (e) {
@@ -33,7 +33,7 @@ const selectPhoto = async e => {
         image.value = e.target.files[0];
         await uploadPhoto();
     } catch (e) {
-        console.log(e.message);
+        res.value = e.message;
     }
 };
 
@@ -45,7 +45,7 @@ const uploadPhoto = async () => {
         await uploadBytes(storageRef, image.value, metaData);
         await loadPhoto();
     } catch (e) {
-        console.log(e.message);
+        res.value = e.message;
     }
 };
 
@@ -55,7 +55,7 @@ const loadPhoto = async () => {
         await associatePhoto(url);
         await userStore.updatePhoto(url);
     } catch (e) {
-        console.log(e.message);
+        res.value = e.message;
     }
 };
 
@@ -66,7 +66,7 @@ const associatePhoto = async url => {
             url
         }, { merge: true });
     } catch (e) {
-        console.log(e.message);
+        res.value = e.message;
     }
 };
 
@@ -80,44 +80,51 @@ const associateRacda = async () => {
         userStore.userData = {...userStore.userData, expDate: expDate.value};
         userStore.racdaAlert();
     } catch (e) {
-        console.log(e.message);
+        res.value = e.message;
     }
 };
 </script>
 
 <template>
-    <div class="container">
-        <div class="row">
-            <div class="col-1 col-sm-2 col-lg-3 col-xxl-4"></div>
-            <div class="col-10 col-sm-8 col-lg-6 col-xxl-4">
-                <form enctype="multipart/form-data" class="d-grid" @submit.prevent>
-                    <label for="inputImg"><img :src= userStore.userData?.photo id="userImg" alt="Logo" width="300" height="235" style="cursor: pointer" class="mt-5 mx-auto d-none d-xxl-block rounded-circle"></label>
-                    <label for="inputImg"><img :src= userStore.userData?.photo id="userImg" alt="Logo" width="200" height="140" style="cursor: pointer" class="mt-3 mx-auto d-none d-xl-block d-xxl-none rounded-circle"></label>
-                    <label for="inputImg"><img :src= userStore.userData?.photo id="userImg" alt="Logo" width="200" height="130" style="cursor: pointer" class="mt-2 mx-auto d-block d-xl-none rounded-circle"></label>
-                    <input type="file" id="inputImg" class="form-control" accept="image/*" @change="selectPhoto($event)" style="display: none; visibility: none">
-                </form>
 
-                <form id="main" :class="`${validate}`" @submit.prevent="submitData" novalidate>
-                    <div class="mb-3">
-                        <input type="email" class="form-control mt-3 mt-xl-4 mt-xxl-5" v-model.trim="email" disabled required>
-                    </div>
-                    <div class="mb-3">
-                        <input type="text" class="form-control" v-model.trim="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <input type="date" class="form-control" v-model="expDate" required>
-                        <div class="form-text ms-1">Fecha de vencimiento del RACDA.</div>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary mt-1 mt-xl-3" :disabled="userStore.loadingUser">Actualizar</button>
-                    </div>
-                    <div class="d-flex justify-content-center mb-1 mb-xl-3 mt-1 mt-xl-4">
-                        <button type="button" class="btn btn-link"><RouterLink to="/recuperacion">¿Desea cambiar la contraseña?</RouterLink></button>
-                    </div>
-                    <div :class="`alert ${res == 'Informacion actualizada.' ? 'alert-success' : 'alert-danger'} mt-4 text-center`" role="alert" v-if="res">{{ res }}</div>
-                </form>
-            </div>
-            <div class="col-1 col-sm-2 col-lg-3 col-xxl-4"></div>
-        </div>
-    </div>
+    <main class="authentication container my-auto">
+
+        <form class="authentication__form mx-auto" enctype="multipart/form-data" @submit.prevent="submitData" novalidate>
+            <fieldset class="authentication__content d-flex flex-column justify-content-center align-items-center">
+                <legend class="authentication__legend text-center w-100 mb-0">Usuario</legend>
+
+                <div class="authentication__profile-photo">
+                    <label class="authentication__profile-label" for="inputImg">
+                        <img class="authentication__profile-img rounded-circle" :src= userStore.userData?.photo id="userImg" alt="Logo" width="200" height="130">
+                    </label>
+                    <input class="authentication__profile-hidden form-control" type="file" id="inputImg" accept="image/*" @change="selectPhoto($event)">
+                </div>
+
+                <div :class="`authentication__field d-flex align-items-center mb-5 w-100 ${validate}`">
+                    <label class="authentication__label me-3 me-sm-0" for="email">Email: </label>
+                    <input class="authentication__input form-control py-2" type="email" id="email" placeholder="email@example.com" v-model.trim="email" disabled required>
+                </div>
+
+                <div :class="`authentication__field d-flex align-items-center mb-5 w-100 ${validate}`">
+                    <label class="authentication__label me-3 me-sm-0" for="name">Nombre: </label>
+                    <input class="authentication__input form-control py-2" type="text" id="name" placeholder="Empresa C.A." v-model.trim="name" required>
+                </div>
+
+                <div :class="`authentication__field d-flex align-items-center mb-5 w-100 ${validate}`">
+                    <label class="authentication__label me-3 me-sm-0" for="date">Vencimiento del RACDA: </label>
+                    <input class="authentication__input form-control py-2" type="date" id="date" v-model.trim="expDate" required>
+                </div>
+
+                <div class="authentication__btn d-flex justify-content-end">
+                    <button class="authentication__submit authentication__submit--registro" type="submit" :disabled="userStore.loadingUser">Actualizar</button>
+                </div>
+
+                <RouterLink class="authentication__recover mt-5 mb-3" to="/recuperacion">¿Desea cambiar la contraseña?</RouterLink>
+            </fieldset>
+
+            <div :class="`authentication__alert alert ${res == 'Informacion actualizada.' ? 'alert-success' : 'alert-danger'} text-center mx-auto mt-2 mt-md-5`" role="alert" v-if="res">{{res}}</div>
+        </form>
+
+    </main>
+
 </template>

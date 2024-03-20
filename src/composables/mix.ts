@@ -1,8 +1,8 @@
-import { useUserStore } from '../stores/user';
-import { ref } from 'vue';
-import { db } from '../firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
-import { Toast } from 'bootstrap';
+import {useUserStore} from '../stores/user';
+import {ref} from 'vue';
+import {db} from '../firebaseConfig';
+import {doc, getDoc} from 'firebase/firestore';
+import {Toast} from 'bootstrap';
 
 export const useMix = () => {
   const res = ref(''), msgColor = ref('');

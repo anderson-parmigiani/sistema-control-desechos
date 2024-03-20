@@ -1,0 +1,117 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.main {
+
+    &__new-btn {
+        background-color: v.$terciario;
+        border: none;
+        padding: .8rem 2rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        transition-property: background-color;
+        transition-duration: .3s;
+        color: v.$negro;
+        &:hover {
+            background-color: darken(v.$terciario, 10%);
+        }
+        &:disabled:hover {
+            background-color: v.$terciario;
+        }
+    }
+
+    &__header {
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+
+    &__table {
+        border: .5rem solid v.$primario;
+        width: 100%;
+
+    }
+
+    &__thead {
+        background-color: v.$primario;
+    }
+
+    &__th {
+        padding: 2rem 1rem;
+        text-transform: uppercase;
+    }
+
+    &__printer-btn {
+        background-color: v.$terciario;
+        color: v.$negro;
+        border: none;
+        padding: .6rem 1.2rem;
+        transition-property: background-color;
+        transition-duration: .3s;
+        @include m.telefono {
+            padding-inline: 1.4rem;
+        }
+        @include m.tablet {
+            padding-inline: 1.5rem;
+        }
+        @include m.desktop-xxl {
+            padding-inline: 1.7rem;
+        }
+        &:hover {
+            background-color: darken(v.$terciario, 10%);
+        }
+    }
+}
+
+.modal {
+
+    &__new {
+        width: 300px;
+    }
+    &__new-header,
+    &__delete-header {
+        border: 0;
+    }
+
+    &__new-title,
+    &__delete-title {
+        font-size: 1.8rem;
+    }
+
+    &__new-close,
+    &__delete-close {
+        opacity: 1;
+        &:focus {
+            box-shadow: none;
+        }
+    }
+
+    &__new-manual {
+        font-size: 1.6rem!important;
+        padding-top: 0px!important;
+        margin-bottom: 0px!important;
+        padding-left: 13px!important;
+    }
+    &__new-manual:focus {
+        outline: none;
+    }
+
+    &__new-footer,
+    &__delete-footer {
+        border: 0;
+    }
+
+    &__new-btn,
+    &__delete-btn {
+        background-color: v.$terciario;
+        border: none;
+        padding: .8rem 2rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        transition-property: background-color;
+        transition-duration: .3s;
+        color: v.$negro;
+        &:hover {
+            background-color: darken(v.$terciario, 10%);
+        }
+    }
+}

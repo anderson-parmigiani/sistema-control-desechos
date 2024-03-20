@@ -1,0 +1,9 @@
+@use '../base/variables' as v;
+
+.footer {
+    background-color: darken(v.$blanco, 5%);
+}
+
+.footer__text {
+    font-size: 1.4rem;
+}

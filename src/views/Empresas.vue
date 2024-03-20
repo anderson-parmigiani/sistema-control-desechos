@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { db } from '../firebaseConfig';
-import { doc, deleteDoc, getDocs, query, orderBy, where, collection, addDoc, getDoc, updateDoc } from 'firebase/firestore'; 
-import { useUserStore } from '../stores/user';
-import { useMix } from '../composables/mix';
+import {onMounted, ref} from 'vue';
+import {db} from '../firebaseConfig';
+import {doc, deleteDoc, getDocs, query, orderBy, where, collection, addDoc, getDoc, updateDoc} from 'firebase/firestore'; 
+import {useUserStore} from '../stores/user';
+import {useMix} from '../composables/mix';
 
 const userStore = useUserStore();
-const { getDateInfo, showMessage, res, msgColor } = useMix();
+const {getDateInfo, showMessage, res, msgColor} = useMix();
 
 const name = ref(null);
 const racda = ref(null);
@@ -205,125 +205,130 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="container-xxl">
-    <div class="row mt-4 mt-xxl-5">
-      <!-- tabla de empresas tratantes registradas -->
-      <div class="col-12 col-xl-6">
-        <div class="mx-auto overflow-scroll thc">
-          <table class="table caption-top table-bordered">
-            <caption class="ms-sm-5 ps-md-5">
-              Empresas Tratantes
-              <button class="btn btn-primary float-end me-2" type="button" @click="prepare('Empresa Tratante')" data-bs-toggle="modal" data-bs-target="#modalRegistro">
-                Añadir
-              </button>
-              <div class="col-5 float-sm-end me-sm-3 me-md-5 mt-3 mt-sm-0">
-                <input type="text" class="form-control" placeholder="Buscar nombre" id="searchTrat" v-model="tratName" @keyup.enter="searchTrt('empTrat')">
-              </div>
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Rif</th>
-                <th scope="col">Nombre</th>
-                <th scope="col">V. Racda</th>
-              </tr>
-            </thead>
-            <tbody id="empTrat" class="table-group-divider">
-              <tr v-for="emp in dTrat" :key="emp.id">
-                <td class="px-0 px-sm-2 d-none d-sm-block">J-{{emp.rif}}</td>
-                <td class="px-0 px-sm-2 d-sm-none">{{emp.rif}}</td>
-                <td class="px-0 px-sm-2">{{emp.name}}</td>
-                <td :class="new Date(emp.venc).getTime() < Date.now() ? 'bg-danger-subtle px-0 px-sm-2' : 'bg-success-subtle px-0 px-sm-2'" @click="() => {id = emp.id; currType = 'empTrat'}">
-                  {{ getDateInfo(emp.venc) }}
-                    <i class="bi bi-trash float-end" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i>
-                    <i class="bi bi-pencil float-end me-1 me-sm-2 me-md-3" @click="getItemEdit(emp.id, 'empTrat')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editModal"></i>
-                    <i class="bi bi-eye float-end me-1 me-sm-2 me-md-3" @click="getItemEdit(emp.id, 'empTrat')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#infoModal"></i>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+
+  <main class="main container d-flex flex-column gap-5 mt-5 pt-3 pt-lg-5">
+
+    <div class="d-flex justify-content-between align-items-center">
+      <p class="main__emp-type mb-0">Tratamiento</p>
+      <div class="authentication__field">
+        <input class="authentication__input authentication__input--empresa form-control" type="text" placeholder="Buscar nombre" id="searchTrat" v-model="tratName" @keyup.enter="searchTrt('empTrat')">
       </div>
-      <!-- tabla de empresas de transporte registradas -->
-      <div class="col-12 col-xl-6">
-        <div class="mx-auto overflow-scroll thc">
-          <table class="table caption-top table-bordered">
-            <caption class="ms-sm-5 ps-md-5">
-                Empresas de Transporte
-                <button class="btn btn-primary float-end me-2" type="button" @click="prepare('Empresa de Transporte')" data-bs-toggle="modal" data-bs-target="#modalRegistro">
-                    Añadir
-                </button>
-                <div class="col-5 float-sm-end me-sm-3 me-md-5 mt-3 mt-sm-0">
-                  <input type="text" class="form-control" placeholder="Buscar nombre" id="searchTrans" v-model="transName" @keyup.enter="searchTrt('empTrans')">
+      <button class="main__new-btn main__new-btn--empresa" type="button" @click="prepare('Empresa Tratante')" data-bs-toggle="modal" data-bs-target="#modalRegistro">Añadir</button>
+    </div>
+    
+    <div class="main__table d-flex flex-column">
+      <table class="main__table-content">
+
+        <thead class="main__thead">
+          <tr>
+            <th class="main__th" scope="col">Rif</th>
+            <th class="main__th" scope="col">Nombre</th>
+            <th class="main__th" scope="col">V. Racda</th>
+          </tr>
+        </thead>
+
+        <tbody class="main__tbody" id="empTrat">
+          <tr v-for="emp in dTrat" :key="emp.id">
+            <td class="main__tbody-td"><span class="d-none d-sm-inline-block">J-</span>{{emp.rif}}</td>
+            <td class="main__tbody-td">{{emp.name}}</td>
+            <td :class="new Date(emp.venc).getTime() < Date.now() ? 'bg-danger-subtle d-flex justify-content-between' : 'bg-success-subtle d-flex justify-content-between'" @click="() => {id = emp.id; currType = 'empTrat'}">
+              {{getDateInfo(emp.venc)}}
+                <div class="main__tbody-icons">
+                  <i class="bi bi-trash me-2 me-sm-3 me-lg-4" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i>
+                  <i class="bi bi-pencil me-2 me-sm-3 me-lg-4" @click="getItemEdit(emp.id, 'empTrat')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editModal"></i>
+                  <i class="bi bi-eye me-2 me-sm-3" @click="getItemEdit(emp.id, 'empTrat')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#infoModal"></i>
                 </div>
-            </caption>
-            <thead>
-                <tr>
-                  <th scope="col">Rif</th>
-                  <th scope="col">Nombre</th>
-                  <th scope="col">V. Racda</th>
-                </tr>
-            </thead>
-            <tbody id="empTrans" class="table-group-divider">
-              <tr v-for="emp in dTrans" :key="emp.id">
-                <td class="px-0 px-sm-2 d-none d-sm-block">J-{{ emp.rif }}</td>
-                <td class="px-0 px-sm-2 d-sm-none">{{ emp.rif }}</td>
-                <td class="px-0 px-sm-2">{{ emp.name }}</td>
-                <td :class="new Date(emp.venc).getTime() < Date.now() ? 'bg-danger-subtle px-0 px-sm-2' : 'bg-success-subtle px-0 px-sm-2'" @click="() => {id = emp.id; currType = 'empTrans'}">
-                  {{ getDateInfo(emp.venc) }}
-                  <i class="bi bi-trash float-end" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i>
-                  <i class="bi bi-pencil float-end me-1 me-sm-2 me-md-3" @click="getItemEdit(emp.id, 'empTrans')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editModal"></i>
-                  <i class="bi bi-eye float-end me-1 me-sm-2 me-md-3" @click="getItemEdit(emp.id, 'empTrans')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#infoModal"></i>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+            </td>
+          </tr>
+        </tbody>
+
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center">
+      <p class="main__emp-type mb-0">Transporte</p>
+      <div class="authentication__field">
+        <input class="authentication__input authentication__input--empresa form-control" type="text" placeholder="Buscar nombre" id="searchTrans" v-model="transName" @keyup.enter="searchTrt('empTrans')">
+      </div>
+      <button class="main__new-btn main__new-btn--empresa" type="button" @click="prepare('Empresa de Transporte')" data-bs-toggle="modal" data-bs-target="#modalRegistro">Añadir</button>
+    </div>
+
+    <div class="main__table d-flex flex-column">
+      <table class="main__table-content">
+
+        <thead class="main__thead">
+          <tr>
+            <th class="main__th" scope="col">Rif</th>
+            <th class="main__th" scope="col">Nombre</th>
+            <th class="main__th" scope="col">V. Racda</th>
+          </tr>
+        </thead>
+
+        <tbody class="main__tbody" id="empTrans">
+          <tr v-for="emp in dTrans" :key="emp.id">
+            <td class="main__tbody-td"><span class="d-none d-sm-inline-block">J-</span>{{emp.rif}}</td>
+            <td class="main__tbody-td">{{emp.name}}</td>
+            <td :class="new Date(emp.venc).getTime() < Date.now() ? 'bg-danger-subtle d-flex justify-content-between' : 'bg-success-subtle d-flex justify-content-between'" @click="() => {id = emp.id; currType = 'empTrans'}">
+              {{getDateInfo(emp.venc)}}
+              <div class="main__tbody-icons">
+                <i class="bi bi-trash me-2 me-sm-3 me-lg-4" data-bs-toggle="modal" data-bs-target="#confirmacion" style="cursor: pointer;"></i>
+                <i class="bi bi-pencil me-2 me-sm-3 me-lg-4" @click="getItemEdit(emp.id, 'empTrans')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editModal"></i>
+                <i class="bi bi-eye me-1 me-2 me-sm-3" @click="getItemEdit(emp.id, 'empTrans')" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#infoModal"></i>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center gap-5 mt-3 mb-4">
+      <div class="main__circle d-flex justify-content-center align-items-center gap-3">
+        <div class="main__circle-g rounded-circle"></div>
+        <p class="mb-0">Racda vigente</p>
+      </div>
+      <div class="main__circle d-flex justify-content-center align-items-center gap-3">
+        <div class="main__circle-r rounded-circle"></div>
+        <p class="mb-0">Racda vencido</p>
       </div>
     </div>
-    <!-- nomenclatura sobre el color del racda -->
-    <div class="d-flex justify-content-center mt-3 mb-2">
-      <div class="cuadrado-g rounded-circle"></div>
-      <div class="ms-1 pt-1 mt-2">Racda vigente</div>
-      <div class="cuadrado-r ms-5 rounded-circle"></div>
-      <div class="ms-1 pt-1 mt-2">Racda vencido</div>
-    </div>
-    <!-- modal de registro de empresa -->
+
     <div class="modal fade" id="modalRegistro" tabindex="-1" aria-labelledby="modalRegistroLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="modalRegistroLabel">{{ typeModal }}</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal__emp modal-dialog modal-dialog-centered">
+        <div class="modal__emp-content modal-content">
+          <div class="modal__emp-header modal-header">
+            <h1 class="modal__emp-title modal-title" id="modalRegistroLabel">{{typeModal}}</h1>
+            <button class="modal__emp-close btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <form @submit.prevent="addItem(typeModal === 'Empresa Tratante' ? 'empTrat' : 'empTrans', typeModal === 'Empresa Tratante' ? dTrat : dTrans)" :class="`row g-3 fm ${validate}`" novalidate>
-              <div class="col-12">
-                <label for="inputNameTrat" class="form-label">Nombre</label>
-                <input type="text" :class="`form-control`" id="inputNameTrat" v-model="name" required>
+            <form :class="`${validate}`" @submit.prevent="addItem(typeModal === 'Empresa Tratante' ? 'empTrat' : 'empTrans', typeModal === 'Empresa Tratante' ? dTrat : dTrans)" novalidate>
+              <div class="mb-4">
+                <label class="form-label" for="inputNameTrat">Nombre</label>
+                <input class="modal__input form-control" type="text" id="inputNameTrat" v-model="name" placeholder="Empresa C.A." required>
               </div>
-              <div class="col-6">
+              <div class="mb-4">
                 <label for="inputNameRif" class="form-label">Rif</label>
                 <div class="input-group">
-                  <span class="input-group-text">J-</span>
-                  <input type="number" :class="`form-control`" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rif" required>
+                  <span class="modal__rif-span input-group-text">J-</span>
+                  <input class="modal__input form-control" type="number" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" placeholder="123456789" v-model="rif" required>
                 </div>
               </div>
-              <div class="col-6">
-                <label for="inputRacdaTrat" class="form-label">Venc. RACDA</label>
-                <input type="date" :class="`form-control`" id="inputRacdaTrat" v-model="racda" required>
+              <div class="mb-4">
+                <label for="inputRacdaTrat" class="form-label">Venc. Racda</label>
+                <input class="modal__input form-control" type="date" id="inputRacdaTrat" placeholder="" v-model="racda" required>
               </div>
-              <div class="col-6">
+              <div class="mb-4">
                 <label for="inputTelTrat" class="form-label">Teléfono</label>
-                <input type="tel" class="form-control" pattern="[0-9]{4}-[0-9]{7}" placeholder="0424-4567890" id="inputTelTrat" v-model="tel" required>
+                <input class="modal__input form-control" type="tel" pattern="[0-9]{4}-[0-9]{7}" placeholder="0424-4567890" id="inputTelTrat" v-model="tel" required>
               </div>
-              <div class="col-6">
+              <div class="mb-4">
                 <label for="inputEmailTrat" class="form-label">Email</label>
-                <input type="email" class="form-control" id="inputEmailTrat" v-model.trim="email" required>
+                <input class="modal__input form-control" type="email" id="inputEmailTrat" placeholder="email@example.com" v-model.trim="email" required>
               </div>
-              <div class="modal-footer">
-                <button v-if = !cargando type="submit" class="btn btn-primary">Registrar</button>
-                <button v-else class="btn btn-primary" type="button" disabled>
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <div class="modal__new-footer modal__emp-footer modal-footer">
+                <button class="modal__new-btn" v-if=!cargando type="submit">Registrar</button>
+                <button class="modal__new-btn d-flex align-items-center justify-content-center" v-else type="button" disabled>
+                <span class="modal__new-loading spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 Registrando...
                 </button>
               </div>
@@ -332,43 +337,43 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <!-- modal de edición de empresa -->
+
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="editModalLabel">{{typeN}}</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal__emp modal-dialog modal-dialog-centered">
+        <div class="modal__emp-content modal-content">
+          <div class="modal__emp-header modal-header">
+            <h1 class="modal__emp-title modal-title" id="editModalLabel">{{typeN}}</h1>
+            <button class="modal__emp-close btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <form @submit.prevent="edit" :class="`row g-3 ${validate}`" novalidate>
-              <div class="col-12">
-                <label for="inputNameEdit" class="form-label">Nombre</label>
-                <input type="text" :class="`form-control`" id="inputNameEdit" v-model="name" required>
+            <form :class="`${validate}`" @submit.prevent="edit" novalidate>
+              <div class="mb-4">
+                <label class="form-label" for="inputNameEdit">Nombre</label>
+                <input class="modal__input form-control" type="text" id="inputNameEdit" v-model="name" required>
               </div>
-              <div class="col-6">
-                <label for="inputNameRif" class="form-label">Rif</label>
+              <div class="mb-4">
+                <label class="form-label" for="inputNameRif">Rif</label>
                 <div class="input-group">
-                  <span class="input-group-text">J-</span>
-                  <input type="number" :class="`form-control`" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rif" required>
+                  <span class="modal__rif-span input-group-text">J-</span>
+                  <input class="modal__input form-control" type="number" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rif" required>
                 </div>
               </div>
-              <div class="col-6">
-                <label for="inputRacdaTrat" class="form-label">Venc. RACDA</label>
-                <input type="date" :class="`form-control`" id="inputRacdaTrat" v-model="racda" required>
+              <div class="mb-4">
+                <label class="form-label" for="inputRacdaTrat">Venc. Racda</label>
+                <input class="modal__input form-control" type="date" id="inputRacdaTrat" v-model="racda" required>
               </div>
-              <div class="col-6">
-                <label for="inputTel" class="form-label">Teléfono</label>
-                <input type="tel" class="form-control" id="inputTel" pattern="[0-9]{4}-[0-9]{7}" placeholder="0424-4567890" v-model="tel" required>
+              <div class="mb-4">
+                <label class="form-label" for="inputTel">Teléfono</label>
+                <input class="modal__input form-control" type="tel" id="inputTel" pattern="[0-9]{4}-[0-9]{7}" placeholder="0424-4567890" v-model="tel" required>
               </div>
-              <div class="col-6">
-                <label for="inputEmail" class="form-label">Email</label>
-                <input type="email" class="form-control" id="inputEmail" v-model.trim="email" required>
+              <div class="mb-4">
+                <label class="form-label" for="inputEmail">Email</label>
+                <input class="modal__input form-control" type="email" id="inputEmail" v-model.trim="email" required>
               </div>
-              <div class="modal-footer">
-                <button v-if = !cargando type="submit" class="btn btn-primary">Editar</button>
-                <button v-else class="btn btn-primary" type="button" disabled>
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <div class="modal__new-footer modal__emp-footer modal-footer">
+                <button class="modal__new-btn" v-if = !cargando type="submit">Editar</button>
+                <button class="modal__new-btn d-flex align-items-center justify-content-center" v-else type="button" disabled>
+                <span class="modal__new-loading spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 Editando...
                 </button>
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-hidden="true" id="disEdit" hidden></button>
@@ -378,59 +383,59 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <!-- modal de información de empresa -->
+
     <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="infoModalLabel">{{typeN}}</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal__emp modal-dialog modal-dialog-centered">
+        <div class="modal__emp-content modal-content">
+          <div class="modal__emp-header modal-header">
+            <h1 class="modal__emp-title modal-title" id="infoModalLabel">{{typeN}}</h1>
+            <button class="modal__emp-close btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <form @submit.prevent :class="`row g-3 ${validate}`" novalidate>
-              <div class="col-12">
-                <label for="inputNameInfo" class="form-label">Nombre</label>
-                <input type="text" :class="`form-control`" id="inputNameInfo" v-model="name" readonly required>
+            <form :class="`${validate}`" @submit.prevent novalidate>
+              <div class="mb-4">
+                <label class="form-label" for="inputNameInfo">Nombre</label>
+                <input class="modal__input form-control" type="text" id="inputNameInfo" v-model="name" readonly required>
               </div>
-              <div class="col-6">
-                <label for="inputNameRif" class="form-label">Rif</label>
+              <div class="mb-4">
+                <label class="form-label" for="inputNameRif">Rif</label>
                 <div class="input-group">
-                  <span class="input-group-text">J-</span>
-                  <input type="number" :class="`form-control`" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rif" readonly required>
+                  <span class="modal__rif-span input-group-text">J-</span>
+                  <input class="modal__input form-control" type="number" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rif" readonly required>
                 </div>
               </div>
-              <div class="col-6">
-                <label for="inputRacda" class="form-label">Venc. RACDA</label>
-                <input type="date" :class="`form-control`" id="inputRacda" v-model="racda" readonly required>
+              <div class="mb-4">
+                <label class="form-label" for="inputRacda">Venc. Racda</label>
+                <input class="modal__input form-control" type="date" id="inputRacda" v-model="racda" readonly required>
               </div>
-              <div class="col-6">
-                <label for="inputTel" class="form-label">Teléfono</label>
-                <input type="tel" class="form-control" id="inputTel" pattern="[0-9]{4}-[0-9]{7}" v-model="tel" readonly required>
+              <div class="mb-4">
+                <label class="form-label" for="inputTel">Teléfono</label>
+                <input class="modal__input form-control" type="tel" id="inputTel" pattern="[0-9]{4}-[0-9]{7}" v-model="tel" readonly required>
               </div>
-              <div class="col-6">
-                <label for="inputEmail" class="form-label">Email</label>
-                <input type="email" class="form-control" id="inputEmail" v-model.trim="email" readonly required>
+              <div class="mb-4">
+                <label class="form-label" for="inputEmail">Email</label>
+                <input class="modal__input form-control" type="email" id="inputEmail" v-model.trim="email" readonly required>
               </div>
             </form>
           </div>
         </div>
       </div>
     </div>
-    <!-- modal para confirmar eliminación de empresa -->
+
     <div class="modal fade" id="confirmacion" data-bs-backdrop="static" tabindex="-1" aria-labelledby="confimacionLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="confirmacionLabel">Confirmación</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal__delete modal-dialog modal-dialog-centered">
+        <div class="modal__delete-content modal-content">
+          <div class="modal__delete-header modal-header">
+            <h1 class="modal__delete-title modal-title ps-3" id="confirmacionLabel">Confirmación</h1>
+            <button class="modal__delete-close btn-close me-2" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <p>Se eliminará la empresa.</p>
-            <div class="modal-footer">
-              <button v-if ="!cargando" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">Cancelar</button>
-              <button v-if ="!cargando" type="button" @click="deleteItem(id, currType)" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">Aceptar</button>
-              <button v-else class="btn btn-primary" type="button" disabled>
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <div class="modal__delete-body modal-body">
+            <p class="ps-3">Se eliminará la empresa.</p>
+            <div class="modal__delete-footer modal-footer">
+              <button class="modal__delete-btn" v-if ="!cargando" type="button" data-bs-dismiss="modal" aria-label="Close">Cancelar</button>
+              <button class="modal__delete-btn" v-if ="!cargando" type="button" @click="deleteItem(id, currType)" data-bs-dismiss="modal" aria-label="Close">Aceptar</button>
+              <button class="modal__delete-btn d-flex align-items-center justify-content-center" v-else type="button" disabled>
+                <span class="modal__delete-loading spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 Eliminando...
               </button>
             </div>
@@ -438,16 +443,18 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <!-- toast con información sobre el estado de los procesos -->
+
     <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3">
       <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
         <div :class="`d-flex ${msgColor}`">
-          <div :class="`toast-body text-center ${msgColor == 'text-bg-danger' ? 'small' : ''}`">
-            {{ res }}
+          <div class="toast-body text-center">
+            {{res}}
           </div>
           <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
       </div>
     </div>
-  </div>
+
+  </main>
+
 </template>

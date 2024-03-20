@@ -1,0 +1,99 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.authentication {
+
+    &__form {
+        max-width: 60rem;
+        position: relative;
+    }
+
+    &__content {
+        border: 1px solid black;
+    }
+
+    &__legend {
+        background-color: v.$primario;
+        color: v.$blanco;
+        text-transform: uppercase;
+        font-weight: 700;
+        padding: 1rem;
+        margin-bottom: 4rem;
+        margin-top: -28px;
+        font-size: 1.6rem;
+    }
+
+    &__field {
+        max-width: 80%;
+        @include m.tablet {
+            max-width: 70%;
+        }
+    }
+
+    &__label {
+        flex-basis: 15rem;
+    }
+
+    &__input {
+        font-size: 1.4rem;
+        &:focus {
+            box-shadow: 0 0 0 .25rem v.$secundario;
+            border-color: v.$secundario;
+        }
+        &:focus-visible {
+            outline-color: v.$secundario;
+        }
+    }
+
+    &__remember {
+        width: 100%;
+        max-width: 80%;
+        font-weight: 700;
+        @include m.tablet {
+            max-width: 70%;
+        }
+    }
+
+    &__check-input:checked {
+        background-color: v.$secundario;
+        border-color: v.$secundario;
+    }
+    &__check-input:focus {
+        box-shadow: 0 0 0 .25rem v.$secundario;
+    }
+    &__check-label {
+        font-size: 1.4rem;
+    }
+
+    &__submit {
+        background-color: v.$terciario;
+        border: none;
+        padding: .6rem 1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        transition-property: background-color;
+        transition-duration: .3s;
+        color: v.$negro;
+        &:hover {
+            background-color: darken(v.$terciario, 10%);
+        }
+    }
+
+    &__recover {
+        font-size: 1.4rem;
+    }
+
+    &__register {
+        font-size: 1.4rem;
+    }
+
+    &__register-link {
+        font-weight: 700;
+    }
+
+    &__alert {
+        max-width: 60rem;
+        width: 100%;
+        position: absolute;
+    }
+}

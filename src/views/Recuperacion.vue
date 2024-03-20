@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useUserStore } from '../stores/user';
-import { ref } from 'vue';
-import { useMix } from '../composables/mix';
+import {useUserStore} from '../stores/user';
+import {useMix} from '../composables/mix';
+import {ref} from 'vue';
 
 const userStore = useUserStore();
-const { res, timer } = useMix();
+const {res, timer} = useMix();
 
 const email = ref();
 const validate = ref('needs-validation');
@@ -21,7 +21,8 @@ const changePassword = async () => {
             }, 7000);
         }
     } catch (e) {
-        console.log(e.message);
+        res.value = e.message;
+        timer(res, 5000);
     } finally {
         validate.value = 'was-validated';
     }
@@ -29,30 +30,26 @@ const changePassword = async () => {
 </script>
 
 <template>
-    <div class="container">
-        <div class="row">
-            <div class="col d-none d-sm-block"></div>
-            <div class="col">
-                <img v-if="userStore.userData" :src="`${userStore.userData.photo}`" alt="Logo" width="300" height="240" class="mt-5 mx-auto d-none d-xxl-block rounded-circle">
-                <img v-else src="../assets/green.svg" alt="Logo" width="300" height="240" class="mt-5 mx-auto d-none d-xxl-block mx-auto">
 
-                <img v-if="userStore.userData" :src="`${userStore.userData.photo}`" alt="Logo" width="250" height="140" class="mt-3 mx-auto d-none d-xl-block d-xxl-none rounded-circle">
-                <img v-else src="../assets/green.svg" alt="Logo" width="250" height="140" class="mt-3 mx-auto d-none d-xl-block d-xxl-none mx-auto">
+    <main class="authentication container my-auto">
 
-                <img v-if="userStore.userData" :src="`${userStore.userData.photo}`" alt="Logo" width="250" height="127" class="mt-2 mx-auto d-block d-xl-none rounded-circle">
-                <img v-else src="../assets/green.svg" alt="Logo" width="250" height="127" class="mt-2 mx-auto d-block d-xl-none mx-auto">
+        <form class="authentication__form mx-auto" @submit.prevent="changePassword" novalidate>
+            <fieldset class="authentication__content d-flex flex-column justify-content-center align-items-center">
+                <legend class="authentication__legend text-center w-100">Recuperación</legend>
 
-                <form :class="`${validate} mt-5`" @submit.prevent="changePassword" novalidate>
-                    <div class="mb-4">
-                        <input type="email" class="form-control mt-3 mt-xl-4 mt-xxl-5" placeholder="Email" v-model.trim="email" required>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary mt-3" :disabled="userStore.loadingUser">Cambiar Contraseña</button>
-                    </div>
-                    <div :class="`alert ${res == 'Se ha enviado un correo.' ? 'alert-success' : 'alert-danger'} mt-4 text-center`" role="alert" v-if="res">{{ res }}</div>
-                </form>
-            </div>
-            <div class="col d-none d-sm-block"></div>
-        </div>
-    </div>
+                <div :class="`authentication__field d-flex align-items-center mb-5 w-100 ${validate}`">
+                    <label class="authentication__label me-3 me-sm-0" for="email">Email: </label>
+                    <input class="authentication__input form-control py-2" type="email" id="email" placeholder="email@example.com" v-model.trim="email" required>
+                </div>
+
+                <div class="authentication__btn d-flex justify-content-end">
+                    <button class="authentication__submit authentication__submit--registro mb-3" type="submit" :disabled="userStore.loadingUser">Recuperar</button>
+                </div>
+            </fieldset>
+
+            <div :class="`authentication__alert alert ${res == 'Se ha enviado un correo.' ? 'alert-success' : 'alert-danger'} text-center mx-auto mt-5`" role="alert" v-if="res">{{res}}</div>
+        </form>
+
+    </main>
+
 </template>

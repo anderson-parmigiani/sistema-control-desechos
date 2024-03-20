@@ -1,0 +1,27 @@
+@import "../../../node_modules/bootstrap/scss/functions";
+@import "../../../node_modules/bootstrap/scss/variables";
+@import "../../../node_modules/bootstrap/scss/maps";
+@import "../../../node_modules/bootstrap/scss/mixins";
+@import "../../../node_modules/bootstrap/scss/utilities";
+
+$spinner-width: 4rem;
+$spinner-height: $spinner-width;
+
+$utilities: map-merge(     
+    $utilities,
+    (
+        "min-viewport-height": (
+            property: min-height,
+            class: min-dvh,
+            values: (
+                        100: 100dvh,
+                        75: 75dvh,
+                        50: 50dvh,
+                        35: 35dvh
+                    )
+        )
+    )
+);
+
+@import "../../../node_modules/bootstrap/scss/spinners";
+@import "../../../node_modules/bootstrap/scss/utilities/api";

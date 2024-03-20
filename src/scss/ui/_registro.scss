@@ -1,0 +1,15 @@
+@use '../base/mixins' as m;
+
+.authentication {
+    &__btn {
+        width: 80%;
+        @include m.tablet {
+            width: 70%;
+        }
+    }
+
+    &__submit--registro {
+        width: 100%;
+        max-width: 50%;
+    }
+}

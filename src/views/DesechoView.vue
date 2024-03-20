@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router'
-import { db } from '../firebaseConfig';
-import { doc, getDoc, getDocs, deleteDoc, query, where, collection, orderBy, addDoc, updateDoc, limit, startAfter, limitToLast, endBefore, DocumentData} from 'firebase/firestore'; 
-import { useUserStore } from '../stores/user';
-import { useMix } from '../composables/mix';
+import {onMounted, ref} from 'vue';
+import {useRoute} from 'vue-router'
+import {db} from '../firebaseConfig';
+import {doc, getDoc, getDocs, deleteDoc, query, where, collection, orderBy, addDoc, updateDoc, limit, startAfter, limitToLast, endBefore, DocumentData} from 'firebase/firestore'; 
+import {useUserStore} from '../stores/user';
+import {useMix} from '../composables/mix';
 import VueMultiselect from 'vue-multiselect';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Chart, ChartData } from 'chart.js/auto';
+import {Chart, ChartData} from 'chart.js/auto';
 
 const userStore = useUserStore();
-const { getDateInfo, showMessage, res, msgColor } = useMix();
+const {getDateInfo, showMessage, res, msgColor} = useMix();
 
 const selectedCP = ref(null);
 const cp = ref(null);
@@ -861,24 +861,38 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="container-sm-fluid container-lg d-flex flex-column tah">
+  <div class="view container-sm-fluid container-lg d-flex flex-column mt-5">
     <!-- Sección superior -->
-    <div class="d-flex align-items-center">
-      <RouterLink class="btn btn-primary" to="/"><i class="bi bi-arrow-left" style="font-size: 20px;"></i></RouterLink>
+    <div class="view__top d-flex align-items-center">
+      
+      <RouterLink class="view__top-btn main__printer-btn" to="/">
+        <i class="bi bi-arrow-left"></i>
+      </RouterLink>
+
       <div class="d-flex ms-auto align-items-center">
-        <div class="cuadrado-g rounded-circle"></div>
+        <div class="main__circle-g rounded-circle"></div>
         <div class="ms-1">Entrada</div>
-        <div class="cuadrado-r ms-2 ms-sm-5 rounded-circle"></div>
+        <div class="main__circle-r ms-2 ms-sm-5 rounded-circle"></div>
         <div class="ms-1">Salida</div>
       </div>
-      <button v-if="userStore.wait == 1" class="btn btn-primary my-auto ms-auto" type="button" data-bs-toggle="modal" data-bs-target="#newItemModal" @click="refresh"><i class="bi bi-plus-lg" style="font-size: 20px;"></i></button>
-      <p v-if="userStore.wait == 2" class="text-danger my-auto ms-auto">Renueve el Racda</p>
-      <p v-if="userStore.wait == 3" class="text-warning my-auto ms-auto">Ingrese el Racda</p>
+
+      <button class="view__top-btn main__printer-btn my-auto ms-auto" v-if="userStore.wait == 1" type="button" data-bs-toggle="modal" data-bs-target="#newItemModal" @click="refresh">
+        <i class="bi bi-plus-lg"></i>
+      </button>
+
+      <p class="text-danger my-auto ms-auto" v-if="userStore.wait == 2">Renueve el Racda</p>
+      <p class="text-warning my-auto ms-auto" v-if="userStore.wait == 3">Ingrese el Racda</p>
     </div>
-    <p class="text-center mt-4 mb-1 lead">{{nombreDesecho?.desecho}}</p>
-    <p class="text-center lead mb-4">Peso Total: <span v-if="!hideCP">{{Number.isInteger(sum) ? sum : parseFloat(sum.toFixed(4))}} kg</span><span v-else>0 kg</span></p>
-    <div class="d-flex flex-column flex-sm-row justify-content-center mb-4">
-      <div class="col-sm-2 col-md-3 me-xl-5 me-sm-2 ps-xxl-5 pe-lg-5 pe-xl-4 mb-3 mb-sm-0">
+
+    <p class="text-center mt-4 mb-1">{{nombreDesecho?.desecho}}</p>
+    <p class="text-center mb-4">Peso Total: 
+      <span v-if="!hideCP">{{Number.isInteger(sum) ? sum : parseFloat(sum.toFixed(4))}} kg</span>
+      <span v-else>0 kg</span>
+    </p>
+
+    <div class="d-flex flex-column flex-sm-row justify-content-center gap-3 mb-5">
+
+      <div class="col-sm-2 col-md-3">
         <VueMultiselect
                     v-model="tipMov"
                     :options="MOV_OPTIONS"
@@ -889,38 +903,43 @@ onMounted(() => {
                     @select="initial"
         />
       </div>
-      <div class="d-flex mb-0 mb-xxl-4 col-12 col-sm-10 col-md-9">
-        <!-- <label for="startDate" class="ms-2 ms-xl-3 ms-xxl-4 ps-xxl-1 form-label lead">Desde:</label> -->
-        <input type="date" class=" me-1 form-control" id="startDate" v-model="sDate" @change="initial">
-        <label for="endDate" class="form-label lead">-</label>
-        <input type="date" class="ms-1 form-control" id="endDate" v-model="eDate" @change="initial">
-        <button class="btn btn-primary ms-2 ms-xxl-5" @click="generatePDF" type="button"><i class="bi bi-printer"></i></button>
-        <button class="btn btn-primary ms-2 ms-xxl-3" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic"><i class="bi bi-bar-chart-fill"></i></button>
+
+      <div class="d-flex justify-content-between align-items-center col-12 col-sm-10 col-md-9">
+        <input class="modal__input modal__input-view form-control" type="date" id="startDate" v-model="sDate" @change="initial">
+        <label class="form-label" for="endDate">-</label>
+        <input class="modal__input modal__input-view form-control" type="date" id="endDate" v-model="eDate" @change="initial">
+        <button class="main__printer-btn h-100" @click="generatePDF" type="button">
+          <i class="bi bi-printer"></i>
+        </button>
+        <button class="main__printer-btn h-100" type="button" data-bs-toggle="modal" data-bs-target="#graphicModal" @click="showGraphic">
+          <i class="bi bi-bar-chart-fill"></i>
+        </button>
       </div>
+
     </div>
     <!-- Modal para registrar movimiento -->
     <div class="modal fade" id="newItemModal" tabindex="-1" aria-labelledby="newItemModal" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="newItemModalLabel">Movimiento de desecho</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal__delete modal-dialog modal-dialog-centered">
+        <div class="modal__delete-content modal-content ps-3 pe-3">
+          <div class="modal__delete-header modal-header">
+            <h1 class="modal__delete-title modal-title" id="newItemModalLabel">Movimiento de desecho</h1>
+            <button class="modal__delete-close btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <form @submit.prevent="checkData" :class="`row g-3 ${validate}`" novalidate>
-              <div class="col-3 mt-3">
-                <label for="fecha" class="form-label">Fecha*</label>
-                <input type="date" class="form-control" id="fecha" v-model="fecha" required>
+          <div class="modal__delete-body modal-body">
+            <form :class="`${validate}`" @submit.prevent="checkData" novalidate>
+              <div class="mb-4">
+                <label class="form-label" for="fecha">Fecha*</label>
+                <input class="modal__input modal__input-des form-control" type="date" id="fecha" v-model="fecha" required>
               </div>
-              <div class="col-3 mt-3">
+              <div class="mb-4">
                 <label for="hora" class="form-label">Hora*</label>
-                <input type="time" class="form-control" id="hora" v-model="hora" required>
+                <input type="time" class="modal__input modal__input-des form-control" id="hora" v-model="hora" required>
               </div>
-              <div class="col-3 mt-3">
+              <div class="mb-4">
                 <label for="CP" class="form-label">Peso*</label>
-                <input type="number" min="0.001" step="0.001" class="form-control" id="CP" oninput="validity.valid||(value='');" v-model="cp" required>
+                <input type="number" min="0.001" step="0.001" class="modal__input modal__input-des form-control" id="CP" oninput="validity.valid||(value='');" v-model="cp" required>
               </div>
-              <div :class="`col-1 mt-3 ${su}`">
+              <div :class="`mb-5 ${su}`">
                 <label class="form-label">Unidad*</label>
                 <VueMultiselect
                 v-model="selectedCP"
@@ -930,7 +949,7 @@ onMounted(() => {
                 placeholder="..."
                 />
               </div>
-              <div class="col-2 mt-3 ps-4">
+              <div class="d-flex justify-content-between align-content-center mb-5">
                 <label class="form-check-label">Tipo*</label>
                 <div class="form-check mt-1">
                   <input class="form-check-input" type="radio" name="entsal" id="entrada" value="Entrada" v-model="eS">
@@ -945,72 +964,80 @@ onMounted(() => {
                   </label>
                 </div>
               </div>
-              <div v-if="!directoryTrans" class="col-5">
+              <div v-if="!directoryTrans" class="mb-4">
                 <label for="trans" class="form-label">Empresa de Transporte</label>
-                <VueMultiselect
-                v-model="empTrans"
-                :options="daTransFilt"
-                :show-labels="false"
-                placeholder="..."
-                />
-              </div>
-              <div v-if="directoryTrans" class="col-3">
-                <label for="inputNameRif" class="form-label">Rif - Emp. Transporte*</label>
-                <div class="input-group">
-                  <span class="input-group-text">J-</span>
-                  <input type="number" class="form-control" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rifTrans" required>
+                <div class="d-flex">
+                  <VueMultiselect
+                  v-model="empTrans"
+                  :options="daTransFilt"
+                  :show-labels="false"
+                  placeholder="..."
+                  />
+                  <i class="bi bi-pencil-square ms-4" style="font-size: 25px; cursor: pointer" @click="testy('Trans')"></i>
                 </div>
               </div>
-              <div class="col-1 mt-5 text-center">
-                <i v-if="!directoryTrans" class="bi bi-pencil-square" style="font-size: 25px; cursor: pointer" @click="testy('Trans')"></i>
-                <i v-else class="bi bi-folder" style="font-size: 25px; cursor: pointer" @click="testy('Trans')"></i>
+
+              <div class="modal__emp-manual d-flex justify-content-between align-content-center mb-4">
+                <div v-if="directoryTrans" class="d-flex flex-column w-100">
+                  <label for="inputNameRif" class="form-label">Rif - Emp. Transporte*</label>
+                  <div class="input-group">
+                    <span class="input-group-text">J-</span>
+                    <input type="number" class="modal__input modal__input-des form-control" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rifTrans" required>
+                    <i class="bi bi-folder ms-4" style="font-size: 25px; cursor: pointer" @click="testy('Trans')"></i>
+                  </div>
+                </div>
               </div>
-              <div v-if="directoryTrat && !directoryTrans" class="col-6"></div>
-              <div v-if="directoryTrans" class="col-3">
-                <label for="racTrans" class="form-label">Venc. RACDA*</label>
-                <input type="date" class="form-control" id="racTrans" v-model="racdaTrans" required>
+
+              <div v-if="directoryTrat && !directoryTrans" class="mb-4"></div>
+              <div v-if="directoryTrans" class="mb-4">
+                <label for="racTrans" class="form-label">Venc. Racda*</label>
+                <input type="date" class="modal__input modal__input-des form-control" id="racTrans" v-model="racdaTrans" required>
               </div>
-              <div v-if="directoryTrans" class="col-5">
+              <div v-if="directoryTrans" class="mb-4">
                 <label for="trans" class="form-label">Empresa de Transporte*</label>
-                <input type="text" class="form-control" id="trans" v-model="empTrans" required>
+                <input type="text" class="modal__input modal__input-des form-control" id="trans" v-model="empTrans" required>
               </div>
-              <div v-if="!directoryTrat" class="col-5">
+              <div v-if="!directoryTrat" class="mb-4">
                 <label for="trat" class="form-label">Empresa Tratante</label>
-                <VueMultiselect
-                v-model="empTrat"
-                :options="daTratFilt"
-                :show-labels="false"
-                placeholder="..."
-                />
-              </div>
-              <div v-if="directoryTrat" class="col-3">
-                <label for="inputNameRif" class="form-label">Rif - Emp. Tratante*</label>
-                <div class="input-group">
-                  <span class="input-group-text">J-</span>
-                  <input type="number" class="form-control" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rifTrat" required>
+                <div class="d-flex">
+                  <VueMultiselect
+                  v-model="empTrat"
+                  :options="daTratFilt"
+                  :show-labels="false"
+                  placeholder="..."
+                  />
+                  <i class="bi bi-pencil-square ms-4" style="font-size: 25px; cursor: pointer" @click="testy('Trat')"></i>
                 </div>
               </div>
-              <div class="col-1 mt-5 text-center">
-                <i v-if="!directoryTrat" class="bi bi-pencil-square" style="font-size: 25px; cursor: pointer" @click="testy('Trat')"></i>
-                <i v-else class="bi bi-folder" style="font-size: 25px; cursor: pointer" @click="testy('Trat')"></i>
+
+              <div class="modal__emp-manual d-flex justify-content-between align-content-center mb-4">
+                <div v-if="directoryTrat" class="d-flex flex-column w-100">
+                  <label for="inputNameRif" class="form-label">Rif - Emp. Tratante*</label>
+                  <div class="input-group">
+                    <span class="input-group-text">J-</span>
+                    <input type="number" class="modal__input modal__input-des form-control" min="0" max="999999999" oninput="validity.valid||(value='');" id="inputNameRif" v-model="rifTrat" required>
+                    <i class="bi bi-folder ms-4" style="font-size: 25px; cursor: pointer" @click="testy('Trat')"></i>
+                  </div>
+                </div>
               </div>
-              <div v-if="directoryTrat" class="col-3">
-                <label for="racTrat" class="form-label">Venc. RACDA*</label>
-                <input type="date" class="form-control" id="racTrat" v-model="racdaTrat" required>
+
+              <div v-if="directoryTrat" class="mb-4">
+                <label for="racTrat" class="form-label">Venc. Racda*</label>
+                <input type="date" class="modal__input modal__input-des form-control" id="racTrat" v-model="racdaTrat" required>
               </div>
-              <div v-if="directoryTrat" class="col-5">
+              <div v-if="directoryTrat" class="mb-4">
                 <label for="trat" class="form-label">Empresa Tratante*</label>
-                <input type="text" class="form-control" id="trat" v-model="empTrat" required>
+                <input type="text" class="modal__input modal__input-des form-control" id="trat" v-model="empTrat" required>
               </div>
-              <div class="form-group">
+              <div class="form-group mb-4">
                 <label for="exampleFormControlTextarea1">Comentario</label>
-                <textarea class="form-control" id="exampleFormControlTextarea1" maxlength="100" rows="2" v-model="com"></textarea>
+                <textarea class="modal__input form-control" id="exampleFormControlTextarea1" maxlength="100" rows="2" v-model="com"></textarea>
               </div>
-              <div class="modal-footer">
-                <span class="me-auto mb-auto">(*) = campo requerido.</span>
-                <button v-if ="!adding" type="submit" class="btn btn-primary">Registrar</button>
-                <button v-else class="btn btn-primary" type="button" disabled>
-                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <div class="modal__delete-footer modal-footer">
+                <p class="me-auto">(*) = campo requerido.</p>
+                <button v-if ="!adding" type="submit" class="modal__delete-btn">Registrar</button>
+                <button v-else class="modal__delete-btn d-flex align-items-center justify-content-center" type="button" disabled>
+                  <span class="modal__delete-loading spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                   Registrando...
                 </button>
               </div>
@@ -1021,27 +1048,27 @@ onMounted(() => {
     </div>
     <!-- Modal para editar movimiento -->
     <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModal" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="editItemModalLabel">Modificar movimiento</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal__emp modal-dialog modal-dialog-centered">
+        <div class="modal__emp-content modal-content ps-3 pe-3">
+          <div class="modal__emp-header modal-header">
+            <h1 class="modal__emp-title modal-title" id="editItemModalLabel">Modificar movimiento</h1>
+            <button type="button" class="modal__emp-close btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <form @submit.prevent="edit" :class="`row g-3 ${validate}`" novalidate>
-              <div class="col-3 mt-3">
+            <form @submit.prevent="edit" :class="`{validate}`" novalidate>
+              <div class="mb-4">
                 <label for="fecha" class="form-label">Fecha*</label>
-                <input type="date" class="form-control" id="fecha" v-model="fecha" required>
+                <input type="date" class="modal__input modal__input-des form-control" id="fecha" v-model="fecha" required>
               </div>
-              <div class="col-3 mt-3">
+              <div class="mb-4">
                 <label for="hora" class="form-label">Hora*</label>
-                <input type="time" class="form-control" id="hora" v-model="hora" required>
+                <input type="time" class="modal__input modal__input-des form-control" id="hora" v-model="hora" required>
               </div>
-              <div class="col-3 mt-3">
+              <div class="mb-4">
                 <label for="CP" class="form-label">Peso*</label>
-                <input type="number" min="0.001" step="0.001" class="form-control" id="CP" oninput="validity.valid||(value='');" v-model="cp" required>
+                <input type="number" min="0.001" step="0.001" class="modal__input modal__input-des form-control" id="CP" oninput="validity.valid||(value='');" v-model="cp" required>
               </div>
-              <div :class="`col-1 mt-3 ${su}`">
+              <div :class="`mb-5 ${su}`">
                 <label class="form-label">Unidad*</label>
                 <VueMultiselect
                 v-model="selectedCP"
@@ -1051,22 +1078,22 @@ onMounted(() => {
                 placeholder="..."
                 />
               </div>
-              <div class="col-2 mt-3 ps-4">
+              <div class="d-flex justify-content-between align-content-center mb-5">
                 <label class="form-check-label">Tipo*</label>
                 <div class="form-check mt-1">
-                  <input class="form-check-input" type="radio" name="entsal" id="entrada" value="Entrada" v-model="eS">
+                  <input class="modal__input form-check-input" type="radio" name="entsal" id="entrada" value="Entrada" v-model="eS">
                   <label class="form-check-label" for="entrada">
                     Entrada
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="radio" name="entsal" id="salida" value="Salida" v-model="eS">
+                  <input class="modal__input form-check-input" type="radio" name="entsal" id="salida" value="Salida" v-model="eS">
                   <label class="form-check-label" for="salida">
                     Salida
                   </label>
                 </div>
               </div>
-              <div class="col-6">
+              <div class="mb-4">
                 <label for="trans" class="form-label">Empresa de Transporte</label>
                 <VueMultiselect v-if="!directoryTrans"
                 v-model="empTrans"
@@ -1075,7 +1102,7 @@ onMounted(() => {
                 placeholder="..."
                 />
               </div>
-              <div class="col-6">
+              <div class="mb-4">
                 <label for="trat" class="form-label">Empresa Tratante</label>
                 <VueMultiselect v-if="!directoryTrat"
                 v-model="empTrat"
@@ -1084,15 +1111,15 @@ onMounted(() => {
                 placeholder="..."
                 />
               </div>
-              <div class="form-group">
+              <div class="form-group mb-4">
                 <label for="exampleFormControlTextarea1">Comentario</label>
-                <textarea class="form-control" id="exampleFormControlTextarea1" maxlength="100" rows="2" v-model="com"></textarea>
+                <textarea class="modal__input form-control" id="exampleFormControlTextarea1" maxlength="100" rows="2" v-model="com"></textarea>
               </div>
-              <div class="modal-footer">
-                <span class="me-auto mb-auto">(*) = campo requerido.</span>
-                <button v-if ="!adding" type="submit" class="btn btn-primary">Editar</button>
-                <button v-else class="btn btn-primary" type="button" disabled>
-                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <div class="modal__delete-footer modal-footer">
+                <p class="me-auto">(*) = campo requerido.</p>
+                <button v-if ="!adding" type="submit" class="modal__delete-btn">Editar</button>
+                <button v-else class="modal__delete-btn d-flex align-items-center justify-content-center" type="button" disabled>
+                  <span class="modal__delete-loading spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                   Editando...
                 </button>
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-hidden="true" id="disEdit" hidden></button>
@@ -1104,25 +1131,25 @@ onMounted(() => {
     </div>
     <!-- Modal para mostrar más información de un movimiento -->
     <div class="modal fade" id="infoItemModal" tabindex="-1" aria-labelledby="infoItemModal" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="infoItemModalLabel">Información</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal__emp modal-dialog modal-dialog-centered">
+        <div class="modal__emp-content modal-content ps-3 pe-3">
+          <div class="modal__emp-header modal-header">
+            <h1 class="modal__emp-title modal-title" id="infoItemModalLabel">Información</h1>
+            <button type="button" class="modal__emp-close btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <form @submit.prevent="" :class="`row g-3 ${validate}`" novalidate>
-              <div class="col-6 mt-3">
+            <form @submit.prevent="" :class="`${validate}`" novalidate>
+              <div class="mb-4">
                 <label for="CP" class="form-label">Peso</label>
-                <input type="number" step="0.001" class="form-control" id="CP" v-model="cp" readonly required>
+                <input type="number" step="0.001" class="modal__input form-control" id="CP" v-model="cp" readonly required>
               </div>
-              <div :class="`col-2 mt-3 ${su}`">
+              <div :class="`mb-5 ${su}`">
                 <label for="unidades" class="form-label">Unidad</label>
-                <input type="text" class="form-control" id="unidades" v-model="selectedCP" readonly required>
+                <input type="text" class="modal__input form-control" id="unidades" v-model="selectedCP" readonly required>
               </div>
-              <div class="col-3 mt-3 ps-5">
+              <div class="d-flex justify-content-between align-content-center mb-5">
                 <label class="form-check-label">Tipo</label>
-                <div class="form-check mt-1">
+                <div class="form-check">
                   <input class="form-check-input" type="radio" name="entsal" id="entrada" value="Entrada" v-model="eS" disabled>
                   <label class="form-check-label" for="entrada">
                     Entrada
@@ -1135,26 +1162,26 @@ onMounted(() => {
                   </label>
                 </div>
               </div>
-              <div class="col-8 mt-3">
+              <div class="mb-4">
                 <label for="fecha" class="form-label">Fecha</label>
-                <input type="date" class="form-control" id="fecha" v-model="fecha" readonly required>
+                <input type="date" class="modal__input form-control" id="fecha" v-model="fecha" readonly required>
               </div>
-              <div class="col-1"></div>
-              <div class="col-3 mt-3">
+              <div class=""></div>
+              <div class="mb-4">
                 <label for="hora" class="form-label">Hora</label>
-                <input type="time" class="form-control" id="hora" v-model="hora" readonly required>
+                <input type="time" class="modal__input form-control" id="hora" v-model="hora" readonly required>
               </div>
-              <div class="col-6">
+              <div class="mb-4">
                 <label for="trans" class="form-label">Empresa de Transporte</label>
-                <input type="text" class="form-control" id="trans" v-model="empTrans" readonly required>
+                <input type="text" class="modal__input form-control" id="trans" v-model="empTrans" readonly required>
               </div>
-              <div class="col-6">
+              <div class="mb-4">
                 <label for="trat" class="form-label">Empresa Tratante</label>
-                <input type="text" class="form-control" id="trat" v-model="empTrat" readonly required>
+                <input type="text" class="modal__input form-control" id="trat" v-model="empTrat" readonly required>
               </div>
-              <div class="form-group">
+              <div class="form-group mb-4">
                 <label for="exampleFormControlTextarea1">Comentario</label>
-                <textarea class="form-control" id="exampleFormControlTextarea1" maxlength="60" rows="2" v-model="com" readonly required></textarea>
+                <textarea class="modal__input form-control" id="exampleFormControlTextarea1" maxlength="60" rows="2" v-model="com" readonly required></textarea>
               </div>
             </form>
           </div>
@@ -1176,7 +1203,7 @@ onMounted(() => {
       <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
         <div :class="`d-flex ${msgColor}`">
           <div :class="`toast-body text-center ${msgColor == 'text-bg-danger' ? 'small' : ''}`">
-            {{ res }}
+            {{res}}
           </div>
           <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
@@ -1224,27 +1251,25 @@ onMounted(() => {
       </tbody>
     </table>
     <!-- Botones de atrás y siguiente -->
-    <div class="d-flex justify-content-center mt-auto">
-      <div class="btn-group" role="group">
-        <button type="button" class="btn btn-primary" @click="prev" :disabled="previousDisabled">Atrás</button>
-        <button type="button" class="btn btn-primary" @click="next" :disabled="nextDisabled">Siguiente</button>
-      </div>
+    <div class="d-flex justify-content-center gap-2 mt-auto mb-3">
+      <button class="main__new-btn" type="button" @click="prev" :disabled="previousDisabled">Atrás</button>
+      <button class="main__new-btn" type="button" @click="next" :disabled="nextDisabled">Siguiente</button>
     </div>
     <!-- Modal de confirmación para eliminar movimiento -->
     <div class="modal fade" id="confirmacion" data-bs-backdrop="static" tabindex="-1" aria-labelledby="confimacionLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="confirmacionLabel">Confirmación</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal__delete modal-dialog modal-dialog-centered">
+        <div class="modal__delete-content modal-content">
+          <div class="modal__delete-header modal-header">
+            <h1 class="modal__delete-title modal-title ps-3" id="confirmacionLabel">Confirmación</h1>
+            <button class="modal__delete-close btn-close me-2" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <p>Se eliminará el registro.</p>
-            <div class="modal-footer">
-              <button v-if ="!adding" type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">Cancelar</button>
-              <button v-if ="!adding" type="button" @click="deleteItem(id)" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">Aceptar</button>
-              <button v-else class="btn btn-primary" type="button" disabled>
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <div class="modal__delete-body modal-body">
+            <p class="ps-3">Se eliminará el registro.</p>
+            <div class="modal__delete-footer modal-footer">
+              <button class="modal__delete-btn" v-if ="!adding" type="button" data-bs-dismiss="modal" aria-label="Close">Cancelar</button>
+              <button class="modal__delete-btn" v-if ="!adding" type="button" @click="deleteItem(id)" data-bs-dismiss="modal" aria-label="Close">Aceptar</button>
+              <button class="modal__delete-btn d-flex align-items-center justify-content-center" v-else type="button" disabled>
+                <span class="modal__delete-loading spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 Eliminando...
               </button>
             </div>

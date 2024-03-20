@@ -1,0 +1,65 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.header {
+    background-color:  darken(v.$blanco, 5%);
+
+    &__logo-image {
+        width: 100px;
+        height: auto;
+    }
+
+    &__racda,
+    &__company-image {
+        height: 4rem;
+        width: auto;
+    }
+
+    &__company-name {
+        text-transform: uppercase;
+        font-weight: 700;
+        font-size: 1.4rem;
+    }
+
+    &__collapse {
+        cursor: pointer;
+        font-size: 2rem;
+    }
+
+    &__bar {
+        background-color: darken(v.$blanco, 5%);
+        position: absolute;
+        z-index: 1;
+        left: 0;
+        width: 100%;
+        height: -webkit-fill-available;
+        @include m.tablet {
+            width: unset;
+            position: unset;
+            height: auto;
+        }
+    }
+}
+
+
+.bar {
+
+    &__link {
+        text-transform: uppercase;
+        line-height: 2;
+        font-weight: 700;
+        @include m.tablet {
+        font-size: 1.4rem;
+        }
+    }
+
+    &__manual {
+        font-size: 2rem;
+        &::before {
+            line-height: 0;
+        }
+        @include m.tablet {
+            border-left: 1px solid v.$negro;
+        }
+    }
+}
